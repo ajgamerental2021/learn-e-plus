@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { checkAndAwardAchievements } from "@/lib/achievements";
 
 const schema = z.object({
   score: z.number().int().min(0).max(100).optional(),
@@ -50,6 +51,7 @@ export async function POST(
 
   // Auto-assign homework for this lesson
   await autoAssignHomework(session.user.id, lessonId);
+  await checkAndAwardAchievements(session.user.id);
 
   return NextResponse.json({ success: true });
 }

@@ -9,8 +9,10 @@ const NAV_ITEMS = [
   { href: "/dashboard", label: "หน้าหลัก", icon: "🏠" },
   { href: "/learn", label: "บทเรียน", icon: "📚" },
   { href: "/vocabulary", label: "คำศัพท์", icon: "📝" },
+  { href: "/conversation", label: "AI Tutor", icon: "🤖" },
   { href: "/homework", label: "การบ้าน", icon: "✏️" },
   { href: "/tests", label: "แบบทดสอบ", icon: "📋" },
+  { href: "/achievements", label: "Badges", icon: "🏆" },
   { href: "/reports/weekly", label: "รายงาน", icon: "📊" },
   { href: "/profile", label: "โปรไฟล์", icon: "👤" },
 ];
