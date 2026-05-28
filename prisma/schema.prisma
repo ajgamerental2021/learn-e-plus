@@ -1,0 +1,791 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ──────────────────────────────────────
+// ENUMS
+// ──────────────────────────────────────
+
+enum UserRole {
+  LEARNER
+  TEACHER
+  PARENT
+  ADMIN
+}
+
+enum AgeGroup {
+  CHILD
+  TEEN
+  YOUNG_ADULT
+  ADULT
+  SENIOR
+}
+
+enum LevelCode {
+  PRE_A1
+  A1
+  A2
+  B1
+  B2
+  C1
+  C2
+}
+
+enum LearningPathCode {
+  GENERAL
+  DAILY_LIFE
+  STUDENTS
+  WORK
+  TOEIC
+  TOEFL
+  IELTS
+}
+
+enum SkillType {
+  VOCABULARY
+  GRAMMAR
+  LISTENING
+  SPEAKING
+  READING
+  WRITING
+}
+
+enum ContentType {
+  TEXT
+  IMAGE
+  AUDIO
+  VIDEO
+  FLASHCARD
+  EXERCISE
+  CONVERSATION
+}
+
+enum QuestionType {
+  MCQ
+  TRUE_FALSE
+  FILL_BLANK
+  MATCHING
+  SENTENCE_ORDER
+  SHORT_ANSWER
+  WRITING
+  SPEAKING
+  READING_PASSAGE
+  AUDIO_QUESTION
+}
+
+enum TestType {
+  PLACEMENT
+  MINI_QUIZ
+  UNIT_TEST
+  WEEKLY_TEST
+  MONTHLY_ASSESSMENT
+  LEVEL_EXAM
+  MOCK_EXAM
+}
+
+enum HomeworkStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  SUBMITTED
+  UNDER_REVIEW
+  NEEDS_REVISION
+  COMPLETED
+  LATE
+  MISSED
+}
+
+enum ProgressStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum VocabStatus {
+  NEW
+  LEARNING
+  MASTERED
+}
+
+enum NotificationChannel {
+  IN_APP
+  PUSH
+  EMAIL
+}
+
+enum NotificationType {
+  DAILY_REMINDER
+  HOMEWORK_DUE_SOON
+  HOMEWORK_DUE_TODAY
+  HOMEWORK_OVERDUE
+  NEW_TEST
+  WEEKLY_TEST
+  MONTHLY_REPORT
+  LEVEL_EXAM_READY
+  LEVEL_PASSED
+  STREAK_AT_RISK
+  NEW_LESSON
+  TEACHER_FEEDBACK
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+// ──────────────────────────────────────
+// USERS
+// ──────────────────────────────────────
+
+model User {
+  id               String    @id @default(cuid())
+  email            String    @unique
+  passwordHash     String?
+  role             UserRole  @default(LEARNER)
+  emailVerified    DateTime?
+  emailVerifyToken String?   @unique
+  resetToken       String?   @unique
+  resetTokenExpiry DateTime?
+  isActive         Boolean   @default(true)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  profile                UserProfile?
+  preferences            UserPreferences?
+  notificationPrefs      NotificationPreference?
+  courseProgress         UserCourseProgress[]
+  unitProgress           UserUnitProgress[]
+  lessonProgress         UserLessonProgress[]
+  vocabularyProgress     VocabularyProgress[]
+  skillScores            SkillScore[]
+  streak                 LearningStreak?
+  dailyGoals             DailyGoal[]
+  userAchievements       UserAchievement[]
+  homeworkAssignments    HomeworkAssignment[]
+  testAttempts           TestAttempt[]
+  placementResult        PlacementTestResult?
+  levelExamResults       LevelExamResult[]
+  weeklyReports          WeeklyReport[]
+  monthlyReports         MonthlyReport[]
+  notifications          Notification[]
+  scheduledNotifications ScheduledNotification[]
+  accounts               Account[]
+  sessions               Session[]
+}
+
+// NextAuth required models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model UserProfile {
+  id               String            @id @default(cuid())
+  userId           String            @unique
+  displayName      String
+  avatarUrl        String?
+  ageGroup         AgeGroup?
+  learningGoal     String?
+  currentLevelId   String?
+  targetLevelId    String?
+  learningPathCode LearningPathCode?
+  examTarget       String?
+  dailyGoalMinutes Int               @default(15)
+  onboardingDone   Boolean           @default(false)
+  startedAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  user         User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  currentLevel Level? @relation("CurrentLevel", fields: [currentLevelId], references: [id])
+  targetLevel  Level? @relation("TargetLevel", fields: [targetLevelId], references: [id])
+}
+
+model UserPreferences {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  uiLanguage      String   @default("th")
+  fontSize        String   @default("medium")
+  autoPlayAudio   Boolean  @default(true)
+  showTranslation Boolean  @default(true)
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ──────────────────────────────────────
+// LEARNING STRUCTURE
+// ──────────────────────────────────────
+
+model Level {
+  id          String    @id @default(cuid())
+  code        LevelCode @unique
+  nameTh      String
+  nameEn      String
+  description String?
+  orderNum    Int
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+
+  courses            Course[]
+  vocabularyItems    VocabularyItem[]
+  questions          Question[]
+  tests              Test[]
+  currentLevelUsers  UserProfile[]    @relation("CurrentLevel")
+  targetLevelUsers   UserProfile[]    @relation("TargetLevel")
+  levelExamResults   LevelExamResult[]
+  levelExamSetting   LevelExamSetting?
+}
+
+model LevelExamSetting {
+  id                    String   @id @default(cuid())
+  levelId               String   @unique
+  minCourseCompletionPct Int     @default(100)
+  minUnitTestAvgScore   Int      @default(70)
+  minLevelExamScore     Int      @default(80)
+  minSkillScore         Int      @default(60)
+  minHomeworkSubmitPct  Int      @default(80)
+  retakeAfterDays       Int      @default(7)
+  updatedAt             DateTime @updatedAt
+
+  level Level @relation(fields: [levelId], references: [id])
+}
+
+model Course {
+  id            String            @id @default(cuid())
+  levelId       String
+  learningPath  LearningPathCode?
+  nameTh        String
+  nameEn        String
+  descriptionTh String?
+  coverImageUrl String?
+  orderNum      Int
+  isPublished   Boolean           @default(false)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  level    Level                @relation(fields: [levelId], references: [id])
+  units    Unit[]
+  progress UserCourseProgress[]
+}
+
+model Unit {
+  id            String   @id @default(cuid())
+  courseId      String
+  nameTh        String
+  nameEn        String
+  descriptionTh String?
+  orderNum      Int
+  isPublished   Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  course   Course             @relation(fields: [courseId], references: [id])
+  lessons  Lesson[]
+  tests    Test[]
+  homework Homework[]
+  progress UserUnitProgress[]
+}
+
+model Lesson {
+  id              String    @id @default(cuid())
+  unitId          String
+  nameTh          String
+  nameEn          String
+  descriptionTh   String?
+  skillType       SkillType
+  orderNum        Int
+  durationMinutes Int       @default(10)
+  isPublished     Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  unit       Unit                 @relation(fields: [unitId], references: [id])
+  contents   LessonContent[]
+  progress   UserLessonProgress[]
+  homework   Homework[]
+}
+
+model LessonContent {
+  id          String      @id @default(cuid())
+  lessonId    String
+  contentType ContentType
+  data        Json
+  orderNum    Int
+  createdAt   DateTime    @default(now())
+
+  lesson Lesson @relation(fields: [lessonId], references: [id])
+}
+
+model VocabularyItem {
+  id                 String    @id @default(cuid())
+  levelId            String
+  word               String
+  translationTh      String
+  partOfSpeech       String
+  category           String?
+  imageUrl           String?
+  audioUrl           String?
+  exampleSentence    String?
+  exampleTranslation String?
+  cefrLevel          LevelCode
+  isActive           Boolean   @default(true)
+  createdAt          DateTime  @default(now())
+
+  level    Level                @relation(fields: [levelId], references: [id])
+  progress VocabularyProgress[]
+}
+
+// ──────────────────────────────────────
+// PROGRESS
+// ──────────────────────────────────────
+
+model UserCourseProgress {
+  id          String         @id @default(cuid())
+  userId      String
+  courseId    String
+  status      ProgressStatus @default(NOT_STARTED)
+  progressPct Int            @default(0)
+  startedAt   DateTime?
+  completedAt DateTime?
+  updatedAt   DateTime       @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id])
+
+  @@unique([userId, courseId])
+}
+
+model UserUnitProgress {
+  id          String         @id @default(cuid())
+  userId      String
+  unitId      String
+  status      ProgressStatus @default(NOT_STARTED)
+  startedAt   DateTime?
+  completedAt DateTime?
+  updatedAt   DateTime       @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  unit Unit @relation(fields: [unitId], references: [id])
+
+  @@unique([userId, unitId])
+}
+
+model UserLessonProgress {
+  id            String         @id @default(cuid())
+  userId        String
+  lessonId      String
+  status        ProgressStatus @default(NOT_STARTED)
+  score         Int?
+  timeSpentSecs Int            @default(0)
+  startedAt     DateTime?
+  completedAt   DateTime?
+  updatedAt     DateTime       @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lessonId], references: [id])
+
+  @@unique([userId, lessonId])
+}
+
+model VocabularyProgress {
+  id             String      @id @default(cuid())
+  userId         String
+  vocabularyId   String
+  status         VocabStatus @default(NEW)
+  correctCount   Int         @default(0)
+  incorrectCount Int         @default(0)
+  nextReviewAt   DateTime?
+  updatedAt      DateTime    @updatedAt
+
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vocabulary VocabularyItem @relation(fields: [vocabularyId], references: [id])
+
+  @@unique([userId, vocabularyId])
+}
+
+model SkillScore {
+  id        String    @id @default(cuid())
+  userId    String
+  skillType SkillType
+  score     Int       @default(0)
+  updatedAt DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, skillType])
+}
+
+model LearningStreak {
+  id             String    @id @default(cuid())
+  userId         String    @unique
+  currentStreak  Int       @default(0)
+  longestStreak  Int       @default(0)
+  lastActiveDate DateTime?
+  updatedAt      DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model DailyGoal {
+  id            String   @id @default(cuid())
+  userId        String
+  date          DateTime @db.Date
+  goalMinutes   Int
+  actualMinutes Int      @default(0)
+  isCompleted   Boolean  @default(false)
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+}
+
+model Achievement {
+  id               String   @id @default(cuid())
+  code             String   @unique
+  nameTh           String
+  descriptionTh    String
+  iconUrl          String?
+  requirementType  String
+  requirementValue Int
+  createdAt        DateTime @default(now())
+
+  userAchievements UserAchievement[]
+}
+
+model UserAchievement {
+  id            String   @id @default(cuid())
+  userId        String
+  achievementId String
+  earnedAt      DateTime @default(now())
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement Achievement @relation(fields: [achievementId], references: [id])
+
+  @@unique([userId, achievementId])
+}
+
+// ──────────────────────────────────────
+// HOMEWORK
+// ──────────────────────────────────────
+
+model Homework {
+  id              String    @id @default(cuid())
+  lessonId        String?
+  unitId          String?
+  nameTh          String
+  descriptionTh   String?
+  skillType       SkillType
+  maxScore        Int       @default(100)
+  dueOffsetDays   Int       @default(7)
+  isAutoGenerated Boolean   @default(false)
+  maxAttempts     Int       @default(3)
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  lesson      Lesson?              @relation(fields: [lessonId], references: [id])
+  unit        Unit?                @relation(fields: [unitId], references: [id])
+  assignments HomeworkAssignment[]
+}
+
+model HomeworkAssignment {
+  id         String         @id @default(cuid())
+  homeworkId String
+  userId     String
+  dueDate    DateTime
+  status     HomeworkStatus @default(NOT_STARTED)
+  assignedBy String?
+  assignedAt DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  homework    Homework             @relation(fields: [homeworkId], references: [id])
+  user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  submissions HomeworkSubmission[]
+
+  @@unique([homeworkId, userId])
+}
+
+model HomeworkSubmission {
+  id             String   @id @default(cuid())
+  assignmentId   String
+  submissionData Json
+  submittedAt    DateTime @default(now())
+  attemptNumber  Int      @default(1)
+
+  assignment HomeworkAssignment @relation(fields: [assignmentId], references: [id])
+  feedback   HomeworkFeedback?
+}
+
+model HomeworkFeedback {
+  id           String   @id @default(cuid())
+  submissionId String   @unique
+  feedbackText String?
+  score        Int?
+  reviewedBy   String?
+  reviewedAt   DateTime @default(now())
+
+  submission HomeworkSubmission @relation(fields: [submissionId], references: [id])
+}
+
+// ──────────────────────────────────────
+// TESTS
+// ──────────────────────────────────────
+
+model Test {
+  id            String   @id @default(cuid())
+  type          TestType
+  levelId       String?
+  unitId        String?
+  nameTh        String
+  descriptionTh String?
+  durationMins  Int?
+  passingScore  Int      @default(70)
+  isRandomized  Boolean  @default(true)
+  maxAttempts   Int      @default(3)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  level    Level?        @relation(fields: [levelId], references: [id])
+  unit     Unit?         @relation(fields: [unitId], references: [id])
+  sections TestSection[]
+  attempts TestAttempt[]
+}
+
+model TestSection {
+  id            String    @id @default(cuid())
+  testId        String
+  skillType     SkillType
+  nameTh        String?
+  questionCount Int
+  timeLimitMins Int?
+  orderNum      Int
+
+  test      Test                  @relation(fields: [testId], references: [id])
+  questions TestSectionQuestion[]
+}
+
+model TestSectionQuestion {
+  id         String @id @default(cuid())
+  sectionId  String
+  questionId String
+  orderNum   Int    @default(0)
+
+  section  TestSection @relation(fields: [sectionId], references: [id])
+  question Question    @relation(fields: [questionId], references: [id])
+
+  @@unique([sectionId, questionId])
+}
+
+model Question {
+  id            String       @id @default(cuid())
+  levelId       String?
+  skillType     SkillType
+  questionType  QuestionType
+  questionData  Json
+  correctAnswer Json
+  explanationTh String?
+  difficulty    Difficulty   @default(MEDIUM)
+  points        Int          @default(1)
+  audioUrl      String?
+  imageUrl      String?
+  tags          String[]
+  isActive      Boolean      @default(true)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  level        Level?                @relation(fields: [levelId], references: [id])
+  testSections TestSectionQuestion[]
+  testAnswers  TestAnswer[]
+}
+
+model TestAttempt {
+  id            String    @id @default(cuid())
+  testId        String
+  userId        String
+  startedAt     DateTime  @default(now())
+  completedAt   DateTime?
+  status        String    @default("in_progress")
+  totalScore    Int?
+  timeTakenSecs Int?
+
+  test    Test         @relation(fields: [testId], references: [id])
+  user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answers TestAnswer[]
+  result  TestResult?
+}
+
+model TestAnswer {
+  id          String   @id @default(cuid())
+  attemptId   String
+  questionId  String
+  userAnswer  Json
+  isCorrect   Boolean?
+  score       Int?
+  answeredAt  DateTime @default(now())
+
+  attempt  TestAttempt @relation(fields: [attemptId], references: [id])
+  question Question    @relation(fields: [questionId], references: [id])
+}
+
+model TestResult {
+  id           String   @id @default(cuid())
+  attemptId    String   @unique
+  userId       String
+  testId       String
+  totalScore   Int
+  skillScores  Json
+  passed       Boolean
+  feedbackData Json?
+  createdAt    DateTime @default(now())
+
+  attempt TestAttempt @relation(fields: [attemptId], references: [id])
+}
+
+model PlacementTestResult {
+  id               String    @id @default(cuid())
+  userId           String    @unique
+  attemptId        String    @unique
+  recommendedLevel LevelCode
+  skillBreakdown   Json
+  strengths        String[]
+  weaknesses       String[]
+  createdAt        DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LevelExamResult {
+  id          String     @id @default(cuid())
+  userId      String
+  levelId     String
+  attemptId   String
+  fromLevel   LevelCode
+  toLevel     LevelCode?
+  passed      Boolean
+  totalScore  Int
+  skillScores Json
+  createdAt   DateTime   @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  level Level @relation(fields: [levelId], references: [id])
+}
+
+// ──────────────────────────────────────
+// REPORTS
+// ──────────────────────────────────────
+
+model WeeklyReport {
+  id                String   @id @default(cuid())
+  userId            String
+  weekStartDate     DateTime @db.Date
+  studyDays         Int      @default(0)
+  totalMinutes      Int      @default(0)
+  lessonsCompleted  Int      @default(0)
+  homeworkReceived  Int      @default(0)
+  homeworkSubmitted Int      @default(0)
+  homeworkLate      Int      @default(0)
+  testAvgScore      Float?
+  vocabLearned      Int      @default(0)
+  skillImprovements Json?
+  generatedAt       DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, weekStartDate])
+}
+
+model MonthlyReport {
+  id             String   @id @default(cuid())
+  userId         String
+  monthStartDate DateTime @db.Date
+  reportData     Json
+  generatedAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, monthStartDate])
+}
+
+// ──────────────────────────────────────
+// NOTIFICATIONS
+// ──────────────────────────────────────
+
+model NotificationPreference {
+  id                        String   @id @default(cuid())
+  userId                    String   @unique
+  inAppEnabled              Boolean  @default(true)
+  pushEnabled               Boolean  @default(true)
+  emailEnabled              Boolean  @default(true)
+  dailyReminderEnabled      Boolean  @default(true)
+  dailyReminderTime         String   @default("09:00")
+  homeworkReminderDaysBefore Int     @default(1)
+  quietHoursStart           String?
+  quietHoursEnd             String?
+  updatedAt                 DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  titleTh   String
+  bodyTh    String
+  data      Json?
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ScheduledNotification {
+  id          String              @id @default(cuid())
+  userId      String
+  type        NotificationType
+  channel     NotificationChannel
+  scheduledAt DateTime
+  sentAt      DateTime?
+  status      String              @default("pending")
+  data        Json?
+  createdAt   DateTime            @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
