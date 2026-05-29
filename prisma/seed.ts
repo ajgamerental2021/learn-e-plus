@@ -1,6 +1,10 @@
 import { PrismaClient, LevelCode, SkillType, ContentType } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
 
-const db = new PrismaClient();
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg(pool);
+const db = new PrismaClient({ adapter } as never);
 
 async function main() {
   console.log("🌱 Seeding database...");
@@ -66,33 +70,33 @@ async function main() {
   // ── PRE-A1 VOCABULARY ────────────────────────────────────────────────────
   const vocabData = [
     // Alphabet & Numbers
-    { word: "apple", translationTh: "แอปเปิ้ล", partOfSpeech: "noun", category: "food", exampleSentence: "I eat an apple.", exampleTranslation: "ฉันกินแอปเปิ้ล", cefrLevel: LevelCode.PRE_A1 },
-    { word: "book", translationTh: "หนังสือ", partOfSpeech: "noun", category: "school", exampleSentence: "This is my book.", exampleTranslation: "นี่คือหนังสือของฉัน", cefrLevel: LevelCode.PRE_A1 },
-    { word: "cat", translationTh: "แมว", partOfSpeech: "noun", category: "animals", exampleSentence: "The cat is cute.", exampleTranslation: "แมวตัวนั้นน่ารัก", cefrLevel: LevelCode.PRE_A1 },
-    { word: "dog", translationTh: "สุนัข", partOfSpeech: "noun", category: "animals", exampleSentence: "I have a dog.", exampleTranslation: "ฉันมีสุนัข", cefrLevel: LevelCode.PRE_A1 },
-    { word: "one", translationTh: "หนึ่ง", partOfSpeech: "number", category: "numbers", exampleSentence: "I have one book.", exampleTranslation: "ฉันมีหนังสือหนึ่งเล่ม", cefrLevel: LevelCode.PRE_A1 },
-    { word: "two", translationTh: "สอง", partOfSpeech: "number", category: "numbers", exampleSentence: "I have two cats.", exampleTranslation: "ฉันมีแมวสองตัว", cefrLevel: LevelCode.PRE_A1 },
-    { word: "red", translationTh: "สีแดง", partOfSpeech: "adjective", category: "colors", exampleSentence: "This apple is red.", exampleTranslation: "แอปเปิ้ลนี้สีแดง", cefrLevel: LevelCode.PRE_A1 },
-    { word: "blue", translationTh: "สีน้ำเงิน", partOfSpeech: "adjective", category: "colors", exampleSentence: "The sky is blue.", exampleTranslation: "ท้องฟ้าสีน้ำเงิน", cefrLevel: LevelCode.PRE_A1 },
+    { word: "apple", pronunciationTh: "แอปเปิ้ล", translationTh: "แอปเปิ้ล", partOfSpeech: "noun", category: "food", exampleSentence: "I eat an apple.", exampleTranslation: "ฉันกินแอปเปิ้ล", cefrLevel: LevelCode.PRE_A1 },
+    { word: "book", pronunciationTh: "บุ๊ค", translationTh: "หนังสือ", partOfSpeech: "noun", category: "school", exampleSentence: "This is my book.", exampleTranslation: "นี่คือหนังสือของฉัน", cefrLevel: LevelCode.PRE_A1 },
+    { word: "cat", pronunciationTh: "แคท", translationTh: "แมว", partOfSpeech: "noun", category: "animals", exampleSentence: "The cat is cute.", exampleTranslation: "แมวตัวนั้นน่ารัก", cefrLevel: LevelCode.PRE_A1 },
+    { word: "dog", pronunciationTh: "ด็อก", translationTh: "สุนัข", partOfSpeech: "noun", category: "animals", exampleSentence: "I have a dog.", exampleTranslation: "ฉันมีสุนัข", cefrLevel: LevelCode.PRE_A1 },
+    { word: "one", pronunciationTh: "วัน", translationTh: "หนึ่ง", partOfSpeech: "number", category: "numbers", exampleSentence: "I have one book.", exampleTranslation: "ฉันมีหนังสือหนึ่งเล่ม", cefrLevel: LevelCode.PRE_A1 },
+    { word: "two", pronunciationTh: "ทู", translationTh: "สอง", partOfSpeech: "number", category: "numbers", exampleSentence: "I have two cats.", exampleTranslation: "ฉันมีแมวสองตัว", cefrLevel: LevelCode.PRE_A1 },
+    { word: "red", pronunciationTh: "เร็ด", translationTh: "สีแดง", partOfSpeech: "adjective", category: "colors", exampleSentence: "This apple is red.", exampleTranslation: "แอปเปิ้ลนี้สีแดง", cefrLevel: LevelCode.PRE_A1 },
+    { word: "blue", pronunciationTh: "บลู", translationTh: "สีน้ำเงิน", partOfSpeech: "adjective", category: "colors", exampleSentence: "The sky is blue.", exampleTranslation: "ท้องฟ้าสีน้ำเงิน", cefrLevel: LevelCode.PRE_A1 },
     // A1 vocabulary
-    { word: "hello", translationTh: "สวัสดี", partOfSpeech: "interjection", category: "greetings", exampleSentence: "Hello! My name is Tom.", exampleTranslation: "สวัสดี! ฉันชื่อทอม", cefrLevel: LevelCode.A1 },
-    { word: "goodbye", translationTh: "ลาก่อน", partOfSpeech: "interjection", category: "greetings", exampleSentence: "Goodbye! See you tomorrow.", exampleTranslation: "ลาก่อน! พบกันพรุ่งนี้", cefrLevel: LevelCode.A1 },
-    { word: "family", translationTh: "ครอบครัว", partOfSpeech: "noun", category: "family", exampleSentence: "My family is big.", exampleTranslation: "ครอบครัวของฉันใหญ่มาก", cefrLevel: LevelCode.A1 },
-    { word: "school", translationTh: "โรงเรียน", partOfSpeech: "noun", category: "school", exampleSentence: "I go to school every day.", exampleTranslation: "ฉันไปโรงเรียนทุกวัน", cefrLevel: LevelCode.A1 },
-    { word: "teacher", translationTh: "ครู", partOfSpeech: "noun", category: "school", exampleSentence: "My teacher is kind.", exampleTranslation: "ครูของฉันใจดี", cefrLevel: LevelCode.A1 },
-    { word: "friend", translationTh: "เพื่อน", partOfSpeech: "noun", category: "people", exampleSentence: "She is my best friend.", exampleTranslation: "เธอเป็นเพื่อนที่ดีที่สุดของฉัน", cefrLevel: LevelCode.A1 },
+    { word: "hello", pronunciationTh: "เฮลโล่", translationTh: "สวัสดี", partOfSpeech: "interjection", category: "greetings", exampleSentence: "Hello! My name is Tom.", exampleTranslation: "สวัสดี! ฉันชื่อทอม", cefrLevel: LevelCode.A1 },
+    { word: "goodbye", pronunciationTh: "กู๊ดบาย", translationTh: "ลาก่อน", partOfSpeech: "interjection", category: "greetings", exampleSentence: "Goodbye! See you tomorrow.", exampleTranslation: "ลาก่อน! พบกันพรุ่งนี้", cefrLevel: LevelCode.A1 },
+    { word: "family", pronunciationTh: "แฟมิลี่", translationTh: "ครอบครัว", partOfSpeech: "noun", category: "family", exampleSentence: "My family is big.", exampleTranslation: "ครอบครัวของฉันใหญ่มาก", cefrLevel: LevelCode.A1 },
+    { word: "school", pronunciationTh: "สกูล", translationTh: "โรงเรียน", partOfSpeech: "noun", category: "school", exampleSentence: "I go to school every day.", exampleTranslation: "ฉันไปโรงเรียนทุกวัน", cefrLevel: LevelCode.A1 },
+    { word: "teacher", pronunciationTh: "ทีเชอร์", translationTh: "ครู", partOfSpeech: "noun", category: "school", exampleSentence: "My teacher is kind.", exampleTranslation: "ครูของฉันใจดี", cefrLevel: LevelCode.A1 },
+    { word: "friend", pronunciationTh: "เฟรนด์", translationTh: "เพื่อน", partOfSpeech: "noun", category: "people", exampleSentence: "She is my best friend.", exampleTranslation: "เธอเป็นเพื่อนที่ดีที่สุดของฉัน", cefrLevel: LevelCode.A1 },
     // A2 vocabulary
-    { word: "restaurant", translationTh: "ร้านอาหาร", partOfSpeech: "noun", category: "places", exampleSentence: "Let's go to a restaurant.", exampleTranslation: "ไปร้านอาหารกันเถอะ", cefrLevel: LevelCode.A2 },
-    { word: "journey", translationTh: "การเดินทาง", partOfSpeech: "noun", category: "travel", exampleSentence: "The journey was long.", exampleTranslation: "การเดินทางยาวนาน", cefrLevel: LevelCode.A2 },
-    { word: "weekend", translationTh: "วันหยุดสุดสัปดาห์", partOfSpeech: "noun", category: "time", exampleSentence: "I relax on the weekend.", exampleTranslation: "ฉันพักผ่อนในวันหยุดสุดสัปดาห์", cefrLevel: LevelCode.A2 },
-    { word: "shopping", translationTh: "การซื้อของ", partOfSpeech: "noun", category: "daily life", exampleSentence: "I enjoy shopping.", exampleTranslation: "ฉันชอบการซื้อของ", cefrLevel: LevelCode.A2 },
+    { word: "restaurant", pronunciationTh: "เรสเทอรองท์", translationTh: "ร้านอาหาร", partOfSpeech: "noun", category: "places", exampleSentence: "Let's go to a restaurant.", exampleTranslation: "ไปร้านอาหารกันเถอะ", cefrLevel: LevelCode.A2 },
+    { word: "journey", pronunciationTh: "เจอร์นี่", translationTh: "การเดินทาง", partOfSpeech: "noun", category: "travel", exampleSentence: "The journey was long.", exampleTranslation: "การเดินทางยาวนาน", cefrLevel: LevelCode.A2 },
+    { word: "weekend", pronunciationTh: "วีคเอนด์", translationTh: "วันหยุดสุดสัปดาห์", partOfSpeech: "noun", category: "time", exampleSentence: "I relax on the weekend.", exampleTranslation: "ฉันพักผ่อนในวันหยุดสุดสัปดาห์", cefrLevel: LevelCode.A2 },
+    { word: "shopping", pronunciationTh: "ช็อปปิ้ง", translationTh: "การซื้อของ", partOfSpeech: "noun", category: "daily life", exampleSentence: "I enjoy shopping.", exampleTranslation: "ฉันชอบการซื้อของ", cefrLevel: LevelCode.A2 },
   ];
 
   for (const v of vocabData) {
     const level = v.cefrLevel === LevelCode.PRE_A1 ? preA1 : v.cefrLevel === LevelCode.A1 ? a1 : a2;
     await db.vocabularyItem.upsert({
       where: { id: `vocab-${v.word}` },
-      update: {},
+      update: { pronunciationTh: v.pronunciationTh },
       create: { id: `vocab-${v.word}`, levelId: level.id, ...v },
     });
   }
@@ -241,28 +245,29 @@ async function main() {
     },
   });
 
+  const numbersCards = {
+    cards: [
+      { front: "1", back: "one — หนึ่ง", pronunciation: "วัน" },
+      { front: "2", back: "two — สอง", pronunciation: "ทู" },
+      { front: "3", back: "three — สาม", pronunciation: "ธรี" },
+      { front: "4", back: "four — สี่", pronunciation: "โฟร์" },
+      { front: "5", back: "five — ห้า", pronunciation: "ไฟฟ์" },
+      { front: "6", back: "six — หก", pronunciation: "ซิกส์" },
+      { front: "7", back: "seven — เจ็ด", pronunciation: "เซเวน" },
+      { front: "8", back: "eight — แปด", pronunciation: "เอท" },
+      { front: "9", back: "nine — เก้า", pronunciation: "ไนน์" },
+      { front: "10", back: "ten — สิบ", pronunciation: "เทน" },
+    ],
+  };
   await db.lessonContent.upsert({
     where: { id: "lc-pre-a1-numbers-flashcard" },
-    update: {},
+    update: { data: numbersCards },
     create: {
       id: "lc-pre-a1-numbers-flashcard",
       lessonId: lesson3.id,
       contentType: ContentType.FLASHCARD,
       orderNum: 1,
-      data: {
-        cards: [
-          { front: "1", back: "one — หนึ่ง" },
-          { front: "2", back: "two — สอง" },
-          { front: "3", back: "three — สาม" },
-          { front: "4", back: "four — สี่" },
-          { front: "5", back: "five — ห้า" },
-          { front: "6", back: "six — หก" },
-          { front: "7", back: "seven — เจ็ด" },
-          { front: "8", back: "eight — แปด" },
-          { front: "9", back: "nine — เก้า" },
-          { front: "10", back: "ten — สิบ" },
-        ],
-      },
+      data: numbersCards,
     },
   });
 

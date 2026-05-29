@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { LinkButton } from "@/components/ui/link-button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import DailyChallenge from "@/components/dashboard/DailyChallenge";
 
 const SKILL_LABEL: Record<string, string> = {
   VOCABULARY: "คำศัพท์",
@@ -103,6 +104,9 @@ export default async function DashboardPage() {
           <LinkButton href="/placement-test" size="sm">เริ่มเลย</LinkButton>
         </div>
       )}
+
+      {/* Daily Challenge */}
+      <DailyChallenge />
 
       {/* Stats row */}
       <div className="grid grid-cols-3 gap-3">

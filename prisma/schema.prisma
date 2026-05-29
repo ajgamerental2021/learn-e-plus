@@ -147,6 +147,7 @@ enum Difficulty {
 model User {
   id               String    @id @default(cuid())
   email            String    @unique
+  username         String?   @unique
   passwordHash     String?
   role             UserRole  @default(LEARNER)
   emailVerified    DateTime?
@@ -359,6 +360,7 @@ model VocabularyItem {
   levelId            String
   word               String
   translationTh      String
+  pronunciationTh    String?
   partOfSpeech       String
   category           String?
   imageUrl           String?

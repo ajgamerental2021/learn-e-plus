@@ -14,5 +14,10 @@ export default async function OnboardingPage() {
 
   if (profile?.onboardingDone) redirect("/dashboard");
 
-  return <OnboardingWizard displayName={profile?.displayName ?? "คุณ"} />;
+  return (
+    <div style={{ padding: 40 }}>
+      <h1>Onboarding - {profile?.displayName}</h1>
+      <OnboardingWizard displayName={profile?.displayName ?? "คุณ"} />
+    </div>
+  );
 }

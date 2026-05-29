@@ -47,6 +47,7 @@ function TextBlock({ data }: { data: Record<string, unknown> }) {
 interface FlashCard {
   front: string;
   back: string;
+  pronunciation?: string;
   exampleWord?: string;
 }
 
@@ -93,9 +94,18 @@ function FlashcardBlock({ data }: { data: Record<string, unknown> }) {
             : "border-gray-200 bg-gray-50 hover:border-blue-200"
         }`}
       >
-        <p className="text-2xl font-bold text-gray-800">{flipped ? card.back : card.front}</p>
-        {!flipped && (
-          <p className="text-sm text-gray-400 mt-2">แตะเพื่อดูคำตอบ</p>
+        {flipped ? (
+          <>
+            <p className="text-2xl font-bold text-gray-800">{card.back}</p>
+            {card.pronunciation && (
+              <p className="text-sm text-blue-500 mt-1">อ่านว่า: {card.pronunciation}</p>
+            )}
+          </>
+        ) : (
+          <>
+            <p className="text-2xl font-bold text-gray-800">{card.front}</p>
+            <p className="text-sm text-gray-400 mt-2">แตะเพื่อดูคำตอบ</p>
+          </>
         )}
       </div>
 

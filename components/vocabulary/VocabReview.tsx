@@ -10,6 +10,7 @@ interface VocabCard {
     id: string;
     word: string;
     translationTh: string;
+    pronunciationTh?: string | null;
     partOfSpeech: string;
     exampleSentence?: string | null;
     exampleTranslation?: string | null;
@@ -134,6 +135,9 @@ export default function VocabReview() {
         ) : (
           <>
             <p className="text-3xl font-bold text-gray-800">{card.vocabulary.word}</p>
+            {card.vocabulary.pronunciationTh && (
+              <p className="text-sm text-gray-500">อ่านว่า: <span className="text-blue-600 font-medium">{card.vocabulary.pronunciationTh}</span></p>
+            )}
             <p className="text-xl text-blue-700 font-semibold">{card.vocabulary.translationTh}</p>
             {card.vocabulary.exampleSentence && (
               <div className="mt-2 text-center border-t pt-3 w-full">

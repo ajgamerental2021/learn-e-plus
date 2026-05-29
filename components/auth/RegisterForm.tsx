@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 
 export default function RegisterForm() {
   const router = useRouter();
-  const [form, setForm] = useState({ displayName: "", email: "", password: "", confirmPassword: "" });
+  const [form, setForm] = useState({ displayName: "", username: "", email: "", password: "", confirmPassword: "" });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
@@ -35,6 +35,7 @@ export default function RegisterForm() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         displayName: form.displayName,
+        username: form.username,
         email: form.email,
         password: form.password,
       }),
@@ -80,6 +81,19 @@ export default function RegisterForm() {
               required
               disabled={loading}
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="username">Username</Label>
+            <Input
+              id="username"
+              placeholder="เช่น somchai99"
+              value={form.username}
+              onChange={(e) => update("username", e.target.value)}
+              required
+              minLength={3}
+              disabled={loading}
+            />
+            <p className="text-xs text-gray-400">ใช้สำหรับ login ได้ (a-z, 0-9, _ เท่านั้น)</p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">อีเมล</Label>

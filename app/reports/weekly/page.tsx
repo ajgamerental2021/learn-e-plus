@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import ExportPdfButton from "@/components/reports/ExportPdfButton";
 
 export default async function WeeklyReportPage({ searchParams }: { searchParams: Promise<{ week?: string }> }) {
   const session = await auth();
@@ -58,10 +59,11 @@ export default async function WeeklyReportPage({ searchParams }: { searchParams:
     <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-gray-800">รายงานรายสัปดาห์</h1>
+          <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100">รายงานรายสัปดาห์</h1>
           <p className="text-sm text-gray-400">{weekLabel} · {dateLabel}</p>
         </div>
         <div className="flex gap-2">
+          <ExportPdfButton />
           {weeksBack > 0 && (
             <Link href={`/reports/weekly?week=${weeksBack - 1}`} className="px-3 py-1.5 border rounded-lg text-sm text-gray-600 hover:bg-gray-50">
               →
