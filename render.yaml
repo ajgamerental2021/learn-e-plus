@@ -1,27 +1,30 @@
-databases:
-  - name: learn-e-plus-db
-    databaseName: learn_e_plus
-    user: learn_e_plus
-    plan: free
-
 services:
   - type: web
     name: learn-e-plus
     runtime: node
     plan: free
+    region: singapore
     buildCommand: npm install && npx prisma generate && npm run build
     startCommand: node node_modules/next/dist/bin/next start
     healthCheckPath: /api/health
     envVars:
       - key: DATABASE_URL
-        fromDatabase:
-          name: learn-e-plus-db
-          property: connectionString
+        sync: false
       - key: NEXTAUTH_URL
-        sync: false
+        value: https://learn-e-plus.onrender.com
       - key: NEXTAUTH_SECRET
-        generateValue: true
+        value: 10ZK9cCvJaZfUIH5LW9ktfdfgiKZJxLJhxkJ9aOhHXs=
       - key: RESEND_API_KEY
-        sync: false
-      - key: NEXT_PUBLIC_APP_URL
-        sync: false
+        value: re_placeholder
+      - key: CRON_SECRET
+        value: a2518e558d7ab34c81761fbedcaa7442ea7f10b96f065c90
+      - key: ANTHROPIC_API_KEY
+        value: ""
+      - key: GOOGLE_CLIENT_ID
+        value: ""
+      - key: GOOGLE_CLIENT_SECRET
+        value: ""
+      - key: NEXT_PUBLIC_GOOGLE_ENABLED
+        value: "false"
+      - key: NODE_ENV
+        value: production
