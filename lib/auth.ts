@@ -7,6 +7,11 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { authConfig } from "@/auth.config";
 
+const googleEnabled =
+  process.env.NEXT_PUBLIC_GOOGLE_ENABLED === "true" &&
+  Boolean(process.env.GOOGLE_CLIENT_ID) &&
+  Boolean(process.env.GOOGLE_CLIENT_SECRET);
+
 const credentialsSchema = z.object({
   email: z.string().min(1),
   password: z.string().min(6),
@@ -16,20 +21,24 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
   adapter: PrismaAdapter(db),
   providers: [
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID ?? "",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
-      async profile(profile) {
-        return {
-          id: profile.sub,
-          email: profile.email,
-          name: profile.name,
-          image: profile.picture,
-          role: "LEARNER",
-          onboardingDone: false,
-        };
-      },
-    }),
+    ...(googleEnabled
+      ? [
+          Google({
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            async profile(profile) {
+              return {
+                id: profile.sub,
+                email: profile.email,
+                name: profile.name,
+                image: profile.picture,
+                role: "LEARNER",
+                onboardingDone: false,
+              };
+            },
+          }),
+        ]
+      : []),
     Credentials({
       async authorize(credentials) {
         const parsed = credentialsSchema.safeParse(credentials);
