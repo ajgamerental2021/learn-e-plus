@@ -15,14 +15,14 @@ export async function GET() {
     }),
     db.learningStreak.findUnique({ where: { userId } }),
     db.skillScore.findMany({ where: { userId }, orderBy: { updatedAt: "desc" } }),
-    db.userLessonProgress.count({ where: { userId, isCompleted: true } }),
+    db.userLessonProgress.count({ where: { userId, completedAt: { not: null } } }),
     db.vocabularyProgress.groupBy({
       by: ["status"],
       where: { userId },
       _count: { id: true },
     }),
     db.userLessonProgress.findMany({
-      where: { userId, isCompleted: true },
+      where: { userId, completedAt: { not: null } },
       include: { lesson: { select: { nameTh: true, nameEn: true } } },
       orderBy: { completedAt: "desc" },
       take: 20,

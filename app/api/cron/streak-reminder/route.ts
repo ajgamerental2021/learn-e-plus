@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
     await db.notification.create({
       data: {
         userId: s.userId,
-        type: "GENERAL",
+        type: "STREAK_AT_RISK",
         titleTh: "🔥 อย่าให้ streak หาย!",
         bodyTh: `คุณมี streak ${s.currentStreak} วัน — เรียนวันนี้เพื่อรักษาไว้`,
         isRead: false,

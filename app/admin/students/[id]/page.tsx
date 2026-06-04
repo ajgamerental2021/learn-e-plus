@@ -24,8 +24,9 @@ export default async function StudentDetailPage({ params }: { params: Promise<{ 
       homeworkAssignments: {
         include: {
           submissions: { include: { feedback: true } },
+          homework: { select: { nameTh: true } },
         },
-        orderBy: { createdAt: "desc" },
+        orderBy: { assignedAt: "desc" },
         take: 10,
       },
     },
@@ -107,7 +108,7 @@ export default async function StudentDetailPage({ params }: { params: Promise<{ 
         ) : (
           student.homeworkAssignments.map((hw) => (
             <div key={hw.id} className="flex items-center justify-between text-sm">
-              <span className="text-gray-700 dark:text-gray-200">{hw.titleTh}</span>
+              <span className="text-gray-700 dark:text-gray-200">{hw.homework.nameTh}</span>
               <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                 hw.status === "COMPLETED" ? "bg-green-100 text-green-700" :
                 hw.status === "SUBMITTED" ? "bg-blue-100 text-blue-700" :
