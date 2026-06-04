@@ -16,7 +16,7 @@ export default async function StudentDetailPage({ params }: { params: Promise<{ 
       streak: true,
       skillScores: { orderBy: { updatedAt: "desc" } },
       lessonProgress: {
-        where: { isCompleted: true },
+        where: { completedAt: { not: null } },
         include: { lesson: { select: { nameTh: true } } },
         orderBy: { completedAt: "desc" },
         take: 10,
