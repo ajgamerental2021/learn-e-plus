@@ -35,7 +35,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const parsed = credentialsSchema.safeParse(credentials);
         if (!parsed.success) return null;
 
-        const login = parsed.data.email.trim();
+        const login = parsed.data.email.trim().toLowerCase();
         const isEmail = login.includes("@");
         const user = await db.user.findFirst({
           where: isEmail ? { email: login } : { username: login },

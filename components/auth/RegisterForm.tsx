@@ -49,7 +49,7 @@ export default function RegisterForm() {
       return;
     }
 
-    setSuccess("สมัครสมาชิกสำเร็จ! กรุณาตรวจสอบอีเมลเพื่อยืนยันบัญชี");
+    setSuccess(data.message ?? "สมัครสมาชิกสำเร็จ! สามารถเข้าสู่ระบบได้แล้ว");
     setTimeout(() => router.push("/auth/login"), 3000);
   }
 

@@ -18,6 +18,7 @@ export default function LoginForm() {
   const [loading, setLoading] = useState(false);
 
   const message = params.get("message");
+  const callbackUrl = params.get("callbackUrl") ?? "/onboarding";
 
   const messageMap: Record<string, string> = {
     "email-verified": "ยืนยันอีเมลสำเร็จ สามารถเข้าสู่ระบบได้แล้ว",
@@ -30,9 +31,10 @@ export default function LoginForm() {
     setLoading(true);
 
     const result = await signIn("credentials", {
-      email,
+      email: email.trim(),
       password,
       redirect: false,
+      callbackUrl,
     });
 
     setLoading(false);
@@ -42,7 +44,8 @@ export default function LoginForm() {
       return;
     }
 
-    router.push("/dashboard");
+    const destination = new URL(result?.url ?? callbackUrl, window.location.origin);
+    router.replace(`${destination.pathname}${destination.search}${destination.hash}`);
     router.refresh();
   }
 

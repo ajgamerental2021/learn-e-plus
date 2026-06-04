@@ -6,10 +6,10 @@ import { db } from "@/lib/db";
 import { sendVerificationEmail } from "@/lib/email";
 
 const schema = z.object({
-  email: z.string().email("อีเมลไม่ถูกต้อง"),
+  email: z.string().trim().toLowerCase().email("อีเมลไม่ถูกต้อง"),
   password: z.string().min(8, "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร"),
-  displayName: z.string().min(1, "กรุณากรอกชื่อ").max(50),
-  username: z.string().min(3, "Username ต้องมีอย่างน้อย 3 ตัวอักษร").max(30).regex(/^[a-zA-Z0-9_]+$/, "Username ใช้ได้แค่ a-z, 0-9, _"),
+  displayName: z.string().trim().min(1, "กรุณากรอกชื่อ").max(50),
+  username: z.string().trim().toLowerCase().min(3, "Username ต้องมีอย่างน้อย 3 ตัวอักษร").max(30).regex(/^[a-z0-9_]+$/, "Username ใช้ได้แค่ a-z, 0-9, _"),
 });
 
 export async function POST(req: NextRequest) {
@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json(
-      { message: "สมัครสมาชิกสำเร็จ กรุณายืนยันอีเมลของคุณ", userId: user.id },
+      { message: "สมัครสมาชิกสำเร็จ สามารถเข้าสู่ระบบได้แล้ว", userId: user.id },
       { status: 201 }
     );
   } catch (e) {
