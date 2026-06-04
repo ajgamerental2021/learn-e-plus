@@ -20,9 +20,18 @@ const NAV_ITEMS = [
   { href: "/profile", label: "โปรไฟล์", icon: "👤" },
 ];
 
-const MOBILE_MAIN = NAV_ITEMS.slice(0, 4);
+export default function LearnerNav({ role }: { role?: string }) {
+  const canOpenAdmin = role === "ADMIN" || role === "TEACHER";
+  const navItems = canOpenAdmin
+    ? [{ href: "/admin", label: "Admin", icon: "⚙️" }, ...NAV_ITEMS]
+    : NAV_ITEMS;
+  const mobileMain = canOpenAdmin
+    ? [
+        { href: "/admin", label: "Admin", icon: "⚙️" },
+        ...NAV_ITEMS.slice(0, 3),
+      ]
+    : NAV_ITEMS.slice(0, 4);
 
-export default function LearnerNav() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -40,7 +49,7 @@ export default function LearnerNav() {
           </div>
         </div>
         <div className="space-y-1 flex-1">
-          {NAV_ITEMS.map((item) => {
+          {navItems.map((item) => {
             const active = pathname === item.href || pathname.startsWith(item.href + "/");
             return (
               <Link
@@ -74,7 +83,7 @@ export default function LearnerNav() {
             className="absolute bottom-16 right-2 bg-white rounded-xl shadow-lg border w-52 py-2"
             onClick={(e) => e.stopPropagation()}
           >
-            {NAV_ITEMS.slice(4).map((item) => {
+            {navItems.slice(4).map((item) => {
               const active = pathname === item.href || pathname.startsWith(item.href + "/");
               return (
                 <Link
@@ -104,7 +113,7 @@ export default function LearnerNav() {
 
       {/* Bottom nav — mobile */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t z-20 flex">
-        {MOBILE_MAIN.map((item) => {
+        {mobileMain.map((item) => {
           const active = pathname === item.href || pathname.startsWith(item.href + "/");
           return (
             <Link

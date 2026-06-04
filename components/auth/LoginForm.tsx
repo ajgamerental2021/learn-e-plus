@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { getSession, signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,8 @@ export default function LoginForm() {
   const [loading, setLoading] = useState(false);
 
   const message = params.get("message");
-  const callbackUrl = params.get("callbackUrl") ?? "/onboarding";
+  const explicitCallbackUrl = params.get("callbackUrl");
+  const callbackUrl = explicitCallbackUrl ?? "/dashboard";
 
   const messageMap: Record<string, string> = {
     "email-verified": "ยืนยันอีเมลสำเร็จ สามารถเข้าสู่ระบบได้แล้ว",
@@ -44,7 +45,10 @@ export default function LoginForm() {
       return;
     }
 
-    const destination = new URL(result?.url ?? callbackUrl, window.location.origin);
+    const nextSession = await getSession();
+    const role = (nextSession?.user as { role?: string } | undefined)?.role;
+    const roleHome = role === "ADMIN" || role === "TEACHER" ? "/admin" : callbackUrl;
+    const destination = new URL(explicitCallbackUrl ? result?.url ?? callbackUrl : roleHome, window.location.origin);
     router.replace(`${destination.pathname}${destination.search}${destination.hash}`);
     router.refresh();
   }

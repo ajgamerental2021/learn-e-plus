@@ -20,7 +20,9 @@ export default async function DashboardPage() {
   if (!session?.user?.id) redirect("/auth/login");
 
   const userId = session.user.id;
-  if (session.user.role === "PARENT") {
+  const userRole = (session.user as { role?: string }).role;
+  const canOpenAdmin = userRole === "ADMIN" || userRole === "TEACHER";
+  if (userRole === "PARENT") {
     const links = await db.guardianStudent.findMany({
       where: { guardianId: userId },
       include: {
@@ -196,6 +198,18 @@ export default async function DashboardPage() {
           <p className="text-gray-500 text-sm mt-1">ยังไม่ได้กำหนดระดับ</p>
         )}
       </div>
+
+      {canOpenAdmin && (
+        <div className="rounded-xl border border-gray-900 bg-gray-950 p-4 text-white">
+          <p className="text-xs font-medium text-blue-200">Admin Panel</p>
+          <h2 className="mt-1 font-semibold">จัดการผู้ใช้และระบบ</h2>
+          <p className="mt-1 text-xs text-gray-300">ไปที่รายการ Users เพื่อเพิ่ม แก้ไข ปิดใช้งาน หรือเปลี่ยนประเภท Member</p>
+          <div className="mt-3 grid grid-cols-2 gap-3">
+            <LinkButton href="/admin/users" className="justify-center bg-white text-gray-950 hover:bg-gray-100">Users</LinkButton>
+            <LinkButton href="/admin" variant="outline" className="justify-center border-white/30 text-white hover:bg-white/10">Dashboard</LinkButton>
+          </div>
+        </div>
+      )}
 
       {/* Placement test banner */}
       {!placementDone && (
