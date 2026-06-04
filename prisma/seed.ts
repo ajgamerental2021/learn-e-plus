@@ -570,20 +570,16 @@ function makeAdvancedCourse(input: { level: LevelCode; nameTh: string; nameEn: s
       nameEn: `${input.level} ${theme}`,
       descriptionTh: `ฝึก${theme}ด้วยภาษาอังกฤษระดับ ${input.level}`,
       lessons: input.skills.map((skill, lessonIdx) => {
-        const skillName = skillThai[skill];
+        const profile = advancedLessonProfile(input.level, theme, skill);
         return lesson(
-          `${simpleSlug(theme)}-${simpleSlug(skillName)}`,
-          `${theme}: ${skillName}`,
-          `${theme}: ${skill}`,
+          `${simpleSlug(theme)}-${simpleSlug(profile.skillName)}`,
+          profile.nameTh,
+          profile.nameEn,
           skill,
-          `ใช้${skillName}เพื่อจัดการหัวข้อ "${theme}" ในระดับ ${input.level}`,
-          advancedPattern(input.level, skill, theme),
-          advancedPhrases(theme),
-          [
-            { sentence: `I need to _____ my main point clearly.`, answer: "explain", hint: "อธิบาย" },
-            { sentence: `The speaker gave a useful _____.`, answer: "example", hint: "ตัวอย่าง" },
-            { sentence: `Please summarize the _____ idea.`, answer: "main", hint: "ใจความหลัก" },
-          ],
+          profile.outcome,
+          profile.pattern,
+          profile.phrases,
+          profile.exercises,
           18 + lessonIdx
         );
       }),
@@ -591,21 +587,105 @@ function makeAdvancedCourse(input: { level: LevelCode; nameTh: string; nameEn: s
   };
 }
 
-function advancedPattern(level: LevelCode, skill: SkillType, theme: string) {
-  if (skill === SkillType.WRITING) return `Use a clear structure: context → main point → support → conclusion. Topic: ${theme}.`;
-  if (skill === SkillType.SPEAKING) return `State your point, give one reason, then invite a response. Topic: ${theme}.`;
-  if (skill === SkillType.LISTENING) return `Listen for signposts: first, however, in conclusion. Topic: ${theme}.`;
-  if (skill === SkillType.READING) return `Skim for the main idea, then scan for evidence. Topic: ${theme}.`;
-  return `Use accurate language for ${theme} at ${level}.`;
-}
+function advancedLessonProfile(level: LevelCode, theme: string, skill: SkillType) {
+  const skillName = skillThai[skill];
+  const levelFocus: Record<LevelCode, { aim: string; tone: string; task: string }> = {
+    PRE_A1: { aim: "ใช้คำสั้นและประโยคง่าย", tone: "very simple", task: "say one sentence" },
+    A1: { aim: "สื่อสารข้อมูลพื้นฐาน", tone: "simple", task: "exchange basic information" },
+    A2: { aim: "เล่าเรื่องชีวิตประจำวัน", tone: "clear and practical", task: "describe a familiar situation" },
+    B1: { aim: "อธิบายประสบการณ์ เหตุผล และแผนได้ต่อเนื่อง", tone: "clear and connected", task: "give reasons and examples" },
+    B2: { aim: "อภิปรายประเด็นงานหรือสังคมด้วยเหตุผลหลายมุม", tone: "professional and balanced", task: "compare options and justify a recommendation" },
+    C1: { aim: "สื่อสารเชิงลึกด้วยโครงสร้างและ nuance ที่ชัด", tone: "precise and persuasive", task: "synthesize sources and argue a position" },
+    C2: { aim: "ใช้ภาษาอย่างแม่นยำ ละเอียด และปรับน้ำเสียงได้", tone: "nuanced and sophisticated", task: "evaluate, reframe, and critique complex ideas" },
+  };
 
-function advancedPhrases(theme: string): Phrase[] {
-  return [
-    phrase("main point", "ประเด็นหลัก", `The main point is about ${theme}.`),
-    phrase("supporting evidence", "หลักฐานสนับสนุน", "The writer gives supporting evidence."),
-    phrase("in my view", "ในมุมมองของฉัน", "In my view, the argument is reasonable."),
-    phrase("to summarize", "สรุปคือ", "To summarize, the solution is practical."),
-  ];
+  const focus = levelFocus[level];
+  const nameTh = `${theme}: ${skillName}เชิงลึก`;
+  const nameEn = `${theme}: Advanced ${skill}`;
+  const outcome = `${focus.aim} ในหัวข้อ "${theme}" โดยฝึก${skillName}ผ่าน input, model language, controlled practice และ output task`;
+
+  const patternBySkill: Record<SkillType, string> = {
+    VOCABULARY: `Build a topic word bank → notice collocations → use each item in a sentence. Tone: ${focus.tone}.`,
+    GRAMMAR: `Form → meaning → use: identify the structure, explain why it is used, then produce your own example about ${theme}.`,
+    LISTENING: `Preview keywords → listen for signposts → note the speaker's purpose → summarize the message in 2-3 lines.`,
+    SPEAKING: `Point → reason → example → follow-up question. Keep the response ${focus.tone} and complete the task: ${focus.task}.`,
+    READING: `Skim for gist → scan for evidence → infer attitude → evaluate whether the argument is convincing.`,
+    WRITING: `Plan → topic sentence → evidence → concession → conclusion. Keep paragraphs coherent and use transitions.`,
+  };
+
+  const phraseSets: Record<LevelCode, Phrase[]> = {
+    PRE_A1: [],
+    A1: [],
+    A2: [],
+    B1: [
+      phrase("The main reason is...", "เหตุผลหลักคือ...", `The main reason is that ${theme} affects daily decisions.`),
+      phrase("For example,...", "ตัวอย่างเช่น...", "For example, I changed my routine to save time."),
+      phrase("I used to..., but now...", "เมื่อก่อนฉันเคย...แต่ตอนนี้...", "I used to avoid speaking, but now I practise every day."),
+      phrase("In my experience,...", "จากประสบการณ์ของฉัน...", "In my experience, small habits matter."),
+      phrase("I agree to some extent.", "ฉันเห็นด้วยในระดับหนึ่ง", "I agree to some extent, but there are exceptions."),
+      phrase("The problem can be solved by...", "ปัญหานี้แก้ได้โดย...", "The problem can be solved by setting clearer goals."),
+    ],
+    B2: [
+      phrase("From a practical standpoint,...", "จากมุมมองเชิงปฏิบัติ...", "From a practical standpoint, the proposal is realistic."),
+      phrase("The trade-off is...", "ข้อแลกเปลี่ยนคือ...", "The trade-off is higher cost but better reliability."),
+      phrase("A more sustainable option would be...", "ทางเลือกที่ยั่งยืนกว่าคือ...", "A more sustainable option would be to train the team."),
+      phrase("The evidence suggests that...", "หลักฐานชี้ว่า...", "The evidence suggests that preparation improves outcomes."),
+      phrase("I would recommend...", "ฉันขอแนะนำว่า...", "I would recommend a phased approach."),
+      phrase("However, we should also consider...", "อย่างไรก็ตาม ควรพิจารณา...", "However, we should also consider the risks."),
+    ],
+    C1: [
+      phrase("The issue is more nuanced than it first appears.", "ประเด็นนี้ละเอียดกว่าที่เห็นตอนแรก", "The issue is more nuanced than it first appears."),
+      phrase("A key implication is...", "นัยสำคัญคือ...", "A key implication is that policy must be flexible."),
+      phrase("This raises the question of...", "สิ่งนี้ทำให้เกิดคำถามว่า...", "This raises the question of accountability."),
+      phrase("While the argument is compelling,...", "แม้ข้อโต้แย้งจะน่าเชื่อ...", "While the argument is compelling, it overlooks implementation costs."),
+      phrase("To put it another way,...", "กล่าวอีกอย่างคือ...", "To put it another way, the constraint can become an advantage."),
+      phrase("The conclusion follows only if...", "ข้อสรุปนี้ใช้ได้ก็ต่อเมื่อ...", "The conclusion follows only if the assumptions are correct."),
+    ],
+    C2: [
+      phrase("The distinction is subtle but consequential.", "ความแตกต่างนี้ละเอียดแต่มีผลสำคัญ", "The distinction is subtle but consequential."),
+      phrase("The wording carries an implicit assumption.", "ถ้อยคำนี้มีสมมติฐานแฝง", "The wording carries an implicit assumption about responsibility."),
+      phrase("I would qualify that claim by saying...", "ฉันจะปรับข้อกล่าวอ้างนั้นว่า...", "I would qualify that claim by saying it applies only in stable contexts."),
+      phrase("The argument is elegant, yet incomplete.", "ข้อโต้แย้งนี้งดงามแต่ยังไม่ครบถ้วน", "The argument is elegant, yet incomplete."),
+      phrase("A charitable reading would be...", "การตีความอย่างเป็นธรรมคือ...", "A charitable reading would be that the author values clarity over detail."),
+      phrase("The tone shifts from analytical to evaluative.", "น้ำเสียงเปลี่ยนจากวิเคราะห์เป็นประเมินค่า", "The tone shifts from analytical to evaluative in the final paragraph."),
+    ],
+  };
+
+  const exercisesByLevel: Record<LevelCode, Array<{ sentence: string; answer: string; hint?: string }>> = {
+    PRE_A1: [],
+    A1: [],
+    A2: [],
+    B1: [
+      { sentence: "The main _____ is that practice builds confidence.", answer: "reason", hint: "เหตุผล" },
+      { sentence: "In my _____, small steps work best.", answer: "experience", hint: "ประสบการณ์" },
+      { sentence: "The problem can be _____ by planning ahead.", answer: "solved", hint: "แก้ไข" },
+    ],
+    B2: [
+      { sentence: "From a practical _____, the plan is realistic.", answer: "standpoint", hint: "มุมมอง" },
+      { sentence: "The evidence _____ that preparation matters.", answer: "suggests", hint: "ชี้ให้เห็น" },
+      { sentence: "We should also _____ the risks.", answer: "consider", hint: "พิจารณา" },
+    ],
+    C1: [
+      { sentence: "The issue is more _____ than it first appears.", answer: "nuanced", hint: "ละเอียดซับซ้อน" },
+      { sentence: "This raises the _____ of accountability.", answer: "question", hint: "คำถาม/ประเด็น" },
+      { sentence: "The conclusion follows only if the _____ are correct.", answer: "assumptions", hint: "สมมติฐาน" },
+    ],
+    C2: [
+      { sentence: "The distinction is subtle but _____.", answer: "consequential", hint: "มีผลสำคัญ" },
+      { sentence: "The wording carries an implicit _____.", answer: "assumption", hint: "สมมติฐาน" },
+      { sentence: "The tone shifts from analytical to _____.", answer: "evaluative", hint: "เชิงประเมินค่า" },
+    ],
+  };
+
+  return {
+    skillName,
+    nameTh,
+    nameEn,
+    outcome,
+    pattern: patternBySkill[skill],
+    phrases: phraseSets[level],
+    exercises: exercisesByLevel[level],
+  };
 }
 
 function simpleSlug(text: string) {

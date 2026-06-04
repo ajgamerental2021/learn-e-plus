@@ -6,12 +6,64 @@ interface ImportResult {
   created: number;
   skipped: number;
   errors: string[];
+  courseId?: string;
+  units?: number;
+  lessons?: number;
+  contents?: number;
+  homework?: number;
 }
 
 const VOCAB_TEMPLATE = "word,translationTh,partOfSpeech,exampleSentence,exampleTranslation,levelCode,category\nhello,สวัสดี,interjection,Hello! How are you?,สวัสดี! เป็นยังไงบ้าง?,PRE_A1,greetings\nbook,หนังสือ,noun,I read a book.,ฉันอ่านหนังสือ.,A1,school";
+const CURRICULUM_TEMPLATE = JSON.stringify({
+  course: {
+    id: "course-custom-a1-speaking",
+    levelCode: "A1",
+    nameTh: "A1 Speaking Booster",
+    nameEn: "A1 Speaking Booster",
+    descriptionTh: "คอร์สเสริมการพูดสำหรับผู้เริ่มต้น",
+    orderNum: 50,
+  },
+  units: [
+    {
+      nameTh: "พูดเรื่องตัวเอง",
+      nameEn: "Talking About Yourself",
+      descriptionTh: "ฝึกแนะนำตัวและถามตอบข้อมูลพื้นฐาน",
+      lessons: [
+        {
+          nameTh: "แนะนำตัวแบบมั่นใจ",
+          nameEn: "Confident Introduction",
+          skillType: "SPEAKING",
+          durationMinutes: 12,
+          descriptionTh: "ฝึกพูดแนะนำตัว 4 ประโยค",
+          contents: [
+            {
+              type: "TEXT",
+              data: {
+                title: "โครงสร้าง",
+                body: "My name is ___. I am from ___. I like ___. Nice to meet you.",
+              },
+            },
+            {
+              type: "EXERCISE",
+              data: {
+                type: "fill_blank",
+                instruction: "เติมคำให้ถูกต้อง",
+                questions: [
+                  { sentence: "My _____ is Anna.", answer: "name" },
+                  { sentence: "Nice to _____ you.", answer: "meet" },
+                ],
+              },
+            },
+          ],
+          homeworkPrompt: "เขียน script แนะนำตัวเอง 4-6 ประโยค แล้วส่งมาให้ครูตรวจ",
+        },
+      ],
+    },
+  ],
+}, null, 2);
 
 export default function ContentImporter() {
-  const [type, setType] = useState<"vocabulary" | "questions">("vocabulary");
+  const [type, setType] = useState<"vocabulary" | "curriculum">("vocabulary");
   const [file, setFile] = useState<File | null>(null);
   const [result, setResult] = useState<ImportResult | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -34,11 +86,12 @@ export default function ContentImporter() {
   }
 
   function downloadTemplate() {
-    const blob = new Blob([VOCAB_TEMPLATE], { type: "text/csv" });
+    const template = type === "vocabulary" ? VOCAB_TEMPLATE : CURRICULUM_TEMPLATE;
+    const blob = new Blob([template], { type: type === "vocabulary" ? "text/csv" : "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "vocabulary_template.csv";
+    a.download = type === "vocabulary" ? "vocabulary_template.csv" : "curriculum_template.json";
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -56,11 +109,10 @@ export default function ContentImporter() {
             Vocabulary
           </button>
           <button
-            onClick={() => setType("questions")}
-            disabled
-            className="px-4 py-2 rounded-lg text-sm border border-gray-200 text-gray-400 cursor-not-allowed"
+            onClick={() => setType("curriculum")}
+            className={`px-4 py-2 rounded-lg text-sm border transition-colors ${type === "curriculum" ? "bg-blue-600 text-white border-blue-600" : "border-gray-200 text-gray-600"}`}
           >
-            Questions (coming soon)
+            Curriculum JSON
           </button>
         </div>
       </div>
@@ -68,28 +120,38 @@ export default function ContentImporter() {
       {/* Template */}
       <div className="bg-white rounded-xl border p-4 space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="font-semibold text-gray-700">Template CSV</h2>
+          <h2 className="font-semibold text-gray-700">{type === "vocabulary" ? "Template CSV" : "Template JSON"}</h2>
           <button onClick={downloadTemplate} className="text-sm text-blue-500 hover:underline">
             ดาวน์โหลด Template
           </button>
         </div>
         <div className="bg-gray-50 rounded-lg p-3 overflow-x-auto">
-          <code className="text-xs text-gray-600 whitespace-pre">{VOCAB_TEMPLATE.split("\n")[0]}</code>
+          <code className="text-xs text-gray-600 whitespace-pre">
+            {type === "vocabulary" ? VOCAB_TEMPLATE.split("\n")[0] : CURRICULUM_TEMPLATE.slice(0, 420)}
+          </code>
         </div>
-        <div className="text-xs text-gray-400 space-y-0.5">
-          <p>• Required: word, translationTh</p>
-          <p>• levelCode: PRE_A1, A1, A2, B1, B2, C1, C2</p>
-          <p>• partOfSpeech: noun, verb, adjective, adverb, etc.</p>
-        </div>
+        {type === "vocabulary" ? (
+          <div className="text-xs text-gray-400 space-y-0.5">
+            <p>• Required: word, translationTh</p>
+            <p>• levelCode: PRE_A1, A1, A2, B1, B2, C1, C2</p>
+            <p>• partOfSpeech: noun, verb, adjective, adverb, etc.</p>
+          </div>
+        ) : (
+          <div className="text-xs text-gray-400 space-y-0.5">
+            <p>• Required: course, units, lessons, contents</p>
+            <p>• content types: TEXT, FLASHCARD, CONVERSATION, EXERCISE</p>
+            <p>• homeworkPrompt จะสร้างการบ้าน auto-generated ให้บทเรียนนั้น</p>
+          </div>
+        )}
       </div>
 
       {/* Upload */}
       <div className="bg-white rounded-xl border p-4 space-y-3">
-        <h2 className="font-semibold text-gray-700">อัพโหลด CSV</h2>
+        <h2 className="font-semibold text-gray-700">อัพโหลด {type === "vocabulary" ? "CSV" : "JSON"}</h2>
         <input
           ref={fileRef}
           type="file"
-          accept=".csv,text/csv"
+          accept={type === "vocabulary" ? ".csv,text/csv" : ".json,application/json"}
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
           className="w-full text-sm text-gray-600 file:mr-3 file:px-4 file:py-1.5 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 file:text-sm"
         />
@@ -110,6 +172,12 @@ export default function ContentImporter() {
             <span className="text-green-600">✓ นำเข้า {result.created} รายการ</span>
             {result.skipped > 0 && <span className="text-gray-400">ข้าม {result.skipped} รายการ</span>}
           </div>
+          {result.courseId && (
+            <div className="text-xs text-gray-500 space-y-0.5">
+              <p>Course ID: {result.courseId}</p>
+              <p>{result.units} units · {result.lessons} lessons · {result.contents} content blocks · {result.homework} homework</p>
+            </div>
+          )}
           {result.errors.length > 0 && (
             <div className="bg-red-50 rounded-lg p-3">
               <p className="text-xs text-red-600 font-medium mb-1">Errors ({result.errors.length}):</p>

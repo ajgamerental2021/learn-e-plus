@@ -1,7 +1,6 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
-import { Button } from "@/components/ui/button";
 import { LinkButton } from "@/components/ui/link-button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -21,6 +20,8 @@ export default async function DashboardPage() {
   if (!session?.user?.id) redirect("/auth/login");
 
   const userId = session.user.id;
+  const dueSoonAt = new Date();
+  dueSoonAt.setDate(dueSoonAt.getDate() + 2);
 
   const [profile, streak, skillScores, lessonsDone, homeworkPending] = await Promise.all([
     db.userProfile.findUnique({
@@ -36,7 +37,7 @@ export default async function DashboardPage() {
       where: {
         userId,
         status: { in: ["NOT_STARTED", "IN_PROGRESS"] },
-        dueDate: { lte: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000) },
+        dueDate: { lte: dueSoonAt },
       },
     }),
   ]);
@@ -50,12 +51,10 @@ export default async function DashboardPage() {
           units: {
             where: { isPublished: true },
             orderBy: { orderNum: "asc" },
-            take: 3,
             include: {
               lessons: {
                 where: { isPublished: true },
                 orderBy: { orderNum: "asc" },
-                take: 5,
                 include: { progress: { where: { userId }, take: 1 } },
               },
             },
@@ -64,14 +63,37 @@ export default async function DashboardPage() {
       })
     : null;
 
-  let nextLesson: { id: string; nameTh: string; courseId: string } | null = null;
+  let nextLesson: {
+    id: string;
+    nameTh: string;
+    skillType: string;
+    durationMinutes: number;
+    unitName: string;
+    courseId: string;
+    courseName: string;
+    completedBefore: number;
+    totalLessons: number;
+  } | null = null;
   if (currentCourse) {
+    let completedBefore = 0;
+    const totalLessons = currentCourse.units.reduce((sum, unit) => sum + unit.lessons.length, 0);
     outer: for (const unit of currentCourse.units) {
       for (const lesson of unit.lessons) {
         if (lesson.progress[0]?.status !== "COMPLETED") {
-          nextLesson = { id: lesson.id, nameTh: lesson.nameTh, courseId: currentCourse.id };
+          nextLesson = {
+            id: lesson.id,
+            nameTh: lesson.nameTh,
+            skillType: lesson.skillType,
+            durationMinutes: lesson.durationMinutes,
+            unitName: unit.nameTh,
+            courseId: currentCourse.id,
+            courseName: currentCourse.nameTh,
+            completedBefore,
+            totalLessons,
+          };
           break outer;
         }
+        completedBefore++;
       }
     }
   }
@@ -117,10 +139,43 @@ export default async function DashboardPage() {
 
       {/* Next lesson */}
       {nextLesson && (
-        <div className="bg-white rounded-xl border p-4">
-          <p className="text-xs text-gray-400 mb-1">บทเรียนถัดไป</p>
-          <p className="font-semibold text-gray-800 mb-3">{nextLesson.nameTh}</p>
-          <LinkButton href={`/learn/lesson/${nextLesson.id}`} className="w-full justify-center">เรียนต่อ →</LinkButton>
+        <div className="bg-white rounded-xl border p-4 space-y-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs text-blue-600 font-medium mb-1">แผนวันนี้</p>
+              <h2 className="font-semibold text-gray-800">{nextLesson.nameTh}</h2>
+              <p className="text-xs text-gray-400 mt-1">
+                {nextLesson.courseName} · {nextLesson.unitName}
+              </p>
+            </div>
+            <Badge variant="secondary" className="text-xs shrink-0">
+              {SKILL_LABEL[nextLesson.skillType] ?? nextLesson.skillType}
+            </Badge>
+          </div>
+
+          <div>
+            <div className="flex justify-between text-xs text-gray-400 mb-1">
+              <span>ความคืบหน้าในคอร์ส</span>
+              <span>{nextLesson.completedBefore}/{nextLesson.totalLessons} บท</span>
+            </div>
+            <Progress value={(nextLesson.completedBefore / Math.max(nextLesson.totalLessons, 1)) * 100} className="h-1.5" />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 text-xs">
+            <div className="rounded-lg bg-blue-50 border border-blue-100 p-3">
+              <p className="text-blue-700 font-medium">{nextLesson.durationMinutes} นาที</p>
+              <p className="text-blue-500 mt-0.5">เป้าหมายวันนี้</p>
+            </div>
+            <div className="rounded-lg bg-gray-50 border border-gray-100 p-3">
+              <p className="text-gray-700 font-medium">{homeworkPending} งาน</p>
+              <p className="text-gray-400 mt-0.5">การบ้านใกล้ครบกำหนด</p>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <LinkButton href={`/learn/lesson/${nextLesson.id}`} className="flex-1 justify-center">เรียนบทนี้</LinkButton>
+            <LinkButton href={`/learn/${nextLesson.courseId}`} variant="outline" className="flex-1 justify-center">ดูคอร์ส</LinkButton>
+          </div>
         </div>
       )}
 
