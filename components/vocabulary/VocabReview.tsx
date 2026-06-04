@@ -38,6 +38,7 @@ export default function VocabReview() {
 
   const card = cards[idx];
   const progress = cards.length > 0 ? (idx / cards.length) * 100 : 0;
+  const pronunciation = card ? card.vocabulary.pronunciationTh || makePronunciationHint(card.vocabulary.word) : "";
 
   async function answer(wasCorrect: boolean) {
     const vocabId = card.vocabularyId || card.vocabulary.id;
@@ -129,14 +130,17 @@ export default function VocabReview() {
         {!flipped ? (
           <>
             <p className="text-3xl font-bold text-gray-800">{card.vocabulary.word}</p>
+            {pronunciation && (
+              <p className="text-sm text-blue-600 font-medium">อ่านว่า: {pronunciation}</p>
+            )}
             <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{card.vocabulary.partOfSpeech}</span>
             <p className="text-sm text-gray-400 mt-2">แตะเพื่อดูความหมาย</p>
           </>
         ) : (
           <>
             <p className="text-3xl font-bold text-gray-800">{card.vocabulary.word}</p>
-            {card.vocabulary.pronunciationTh && (
-              <p className="text-sm text-gray-500">อ่านว่า: <span className="text-blue-600 font-medium">{card.vocabulary.pronunciationTh}</span></p>
+            {pronunciation && (
+              <p className="text-sm text-gray-500">อ่านว่า: <span className="text-blue-600 font-medium">{pronunciation}</span></p>
             )}
             <p className="text-xl text-blue-700 font-semibold">{card.vocabulary.translationTh}</p>
             {card.vocabulary.exampleSentence && (
@@ -170,4 +174,27 @@ export default function VocabReview() {
       )}
     </div>
   );
+}
+
+function makePronunciationHint(word: string) {
+  const clean = word.toLowerCase().trim();
+  const hints: Record<string, string> = {
+    ate: "เอท",
+    went: "เว็นท์",
+    saw: "ซอ",
+    bought: "บอท",
+    watched: "วอทช์ท",
+    cleaned: "คลีนด์",
+    visited: "วิสิทิด",
+    played: "เพลย์ด",
+    easier: "อี-ซี-เออร์",
+    useful: "ยูส-ฟูล",
+    example: "อิก-แซม-เพิล",
+    explain: "อิก-สเพลน",
+    main: "เมน",
+    assumption: "อะ-ซัมพ์-ชัน",
+    consequential: "คอน-ซี-เควน-เชิล",
+    evaluative: "อิ-แวล-ยู-เอ-ทิฟ",
+  };
+  return hints[clean] ?? "";
 }

@@ -192,7 +192,6 @@ interface ExerciseQuestion {
 }
 
 function ExerciseBlock({ data }: { data: Record<string, unknown> }) {
-  const type = data.type as string;
   const instruction = data.instruction as string | undefined;
   const questions = (data.questions as ExerciseQuestion[]) ?? [];
   const [userAnswers, setUserAnswers] = useState<string[]>(questions.map(() => ""));
@@ -217,28 +216,34 @@ function ExerciseBlock({ data }: { data: Record<string, unknown> }) {
         {questions.map((q, i) => {
           const parts = q.sentence.split("_____");
           return (
-            <div key={i} className="flex flex-wrap items-center gap-2">
-              <span className="text-gray-700">{parts[0]}</span>
-              <input
-                type="text"
-                value={userAnswers[i]}
-                onChange={(e) => {
-                  const a = [...userAnswers];
-                  a[i] = e.target.value;
-                  setUserAnswers(a);
-                }}
-                disabled={checked}
-                className={`border-b-2 w-24 text-center focus:outline-none px-1 py-0.5 text-sm transition-colors ${
-                  checked
-                    ? isCorrect(i)
-                      ? "border-green-500 text-green-700"
-                      : "border-red-400 text-red-600"
-                    : "border-gray-400 focus:border-blue-500"
-                }`}
-              />
-              {parts[1] && <span className="text-gray-700">{parts[1]}</span>}
+            <div key={i} className="rounded-lg border border-gray-100 bg-gray-50 p-3">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:flex-wrap">
+                <span className="text-gray-700 leading-7">{parts[0]}</span>
+                <input
+                  type="text"
+                  value={userAnswers[i]}
+                  onChange={(e) => {
+                    const a = [...userAnswers];
+                    a[i] = e.target.value;
+                    setUserAnswers(a);
+                  }}
+                  disabled={checked}
+                  placeholder="พิมพ์คำตอบ"
+                  className={`min-h-10 w-full rounded-md border bg-white px-3 py-2 text-base text-gray-900 shadow-sm transition-colors focus:outline-none sm:w-44 ${
+                    checked
+                      ? isCorrect(i)
+                        ? "border-green-500 text-green-700"
+                        : "border-red-400 text-red-600"
+                      : "border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  }`}
+                />
+                {parts[1] && <span className="text-gray-700 leading-7">{parts[1]}</span>}
+              </div>
+              {q.hint && !checked && (
+                <p className="mt-2 text-xs text-gray-400">คำใบ้: {q.hint}</p>
+              )}
               {checked && !isCorrect(i) && (
-                <span className="text-xs text-green-700 bg-green-50 px-2 py-0.5 rounded">
+                <span className="mt-2 inline-flex text-xs text-green-700 bg-green-50 px-2 py-0.5 rounded">
                   เฉลย: {q.answer}
                 </span>
               )}

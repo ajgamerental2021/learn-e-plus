@@ -1027,7 +1027,7 @@ async function seedVocabulary(levelIdValue: string, levelCode: LevelCode, unitSe
         levelId: levelIdValue,
         word: item.front,
         translationTh: item.back,
-        pronunciationTh: item.pronunciation ?? null,
+        pronunciationTh: item.pronunciation ?? pronunciationFor(item.front),
         partOfSpeech: inferPartOfSpeech(item.front),
         category: unitSeed.nameTh,
         exampleSentence: item.example ?? null,
@@ -1040,7 +1040,7 @@ async function seedVocabulary(levelIdValue: string, levelCode: LevelCode, unitSe
         levelId: levelIdValue,
         word: item.front,
         translationTh: item.back,
-        pronunciationTh: item.pronunciation ?? null,
+        pronunciationTh: item.pronunciation ?? pronunciationFor(item.front),
         partOfSpeech: inferPartOfSpeech(word),
         category: unitSeed.nameTh,
         exampleSentence: item.example ?? null,
@@ -1131,6 +1131,53 @@ function inferPartOfSpeech(text: string) {
   if (["a", "an", "the"].includes(text.toLowerCase())) return "article";
   if (text.endsWith("ed") || text.endsWith("ing")) return "verb";
   return "word";
+}
+
+function pronunciationFor(text: string) {
+  const key = text.toLowerCase().trim();
+  const dictionary: Record<string, string> = {
+    ate: "เอท",
+    went: "เว็นท์",
+    saw: "ซอ",
+    bought: "บอท",
+    watched: "วอทช์ท",
+    cleaned: "คลีนด์",
+    visited: "วิสิทิด",
+    played: "เพลย์ด",
+    weekend: "วีค-เอนด์",
+    reservation: "เร-เซอร์-เว-ชัน",
+    passport: "พาส-พอร์ต",
+    transport: "แทรนส์-พอร์ต",
+    taxi: "แท็ก-ซี",
+    train: "เทรน",
+    motorbike: "โม-เทอร์-ไบค์",
+    easier: "อี-ซี-เออร์",
+    faster: "ฟาส-เทอร์",
+    "more useful": "มอร์ ยูส-ฟูล",
+    "more expensive": "มอร์ อิก-สเพน-ซิฟ",
+    headache: "เฮด-เอค",
+    stomachache: "สตัม-มัค-เอค",
+    fever: "ฟี-เวอร์",
+    "sore throat": "ซอร์ โธรท",
+    "main point": "เมน พอยนท์",
+    "supporting evidence": "ซัพ-พอร์-ทิง เอ-วิ-เดนซ์",
+    "in my view": "อิน มาย วิว",
+    "to summarize": "ทู ซัม-มะ-ไรซ์",
+    "the main reason is...": "เดอะ เมน รี-ซัน อิซ",
+    "for example,...": "ฟอร์ อิก-แซม-เพิล",
+    "in my experience,...": "อิน มาย อิก-สพี-เรียนซ์",
+    "from a practical standpoint,...": "ฟรอม อะ แพรค-ทิ-เคิล สแตนด์-พอยนท์",
+    "the trade-off is...": "เดอะ เทรด-ออฟ อิซ",
+    "the evidence suggests that...": "ดิ เอ-วิ-เดนซ์ ซัก-เจสท์ส แดท",
+    "i would recommend...": "ไอ วูด เรค-คะ-เมนด์",
+    "the issue is more nuanced than it first appears.": "ดิ อิช-ชู อิซ มอร์ นิว-ออนซ์ด แดน อิท เฟิร์สท์ อะ-เพียร์ส",
+    "a key implication is...": "อะ คีย์ อิม-พลิ-เค-ชัน อิซ",
+    "this raises the question of...": "ดิส เร-ซิส เดอะ เควส-ชัน ออฟ",
+    "the distinction is subtle but consequential.": "เดอะ ดิส-ติงค์-ชัน อิซ ซับ-เทิล บัท คอน-ซี-เควน-เชิล",
+    "the wording carries an implicit assumption.": "เดอะ เวิร์ด-ดิง แคร์-รีส์ แอน อิม-พลิ-ซิท อะ-ซัมพ์-ชัน",
+    "the argument is elegant, yet incomplete.": "ดิ อาร์-กิว-เมนท์ อิซ เอ-ละ-แกนท์ เย็ท อิน-คอม-พลีท",
+  };
+  return dictionary[key] ?? null;
 }
 
 async function seedAchievements() {

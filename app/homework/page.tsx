@@ -62,7 +62,24 @@ export default async function HomeworkPage({ searchParams }: { searchParams: Pro
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
-      <h1 className="text-xl font-bold text-gray-800">การบ้าน</h1>
+      <div>
+        <h1 className="text-xl font-bold text-gray-800">การบ้าน</h1>
+        <p className="text-sm text-gray-500 mt-1">
+          การบ้านจะถูกสร้างให้อัตโนมัติหลังจากเรียนจบบทเรียนที่มีงานฝึก
+        </p>
+      </div>
+
+      <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
+        <p className="text-sm font-semibold text-blue-800">เริ่มยังไง?</p>
+        <div className="mt-2 grid gap-2 text-sm text-blue-700 sm:grid-cols-3">
+          <div className="rounded-lg bg-white/70 p-3">1. ไปที่เมนูบทเรียน</div>
+          <div className="rounded-lg bg-white/70 p-3">2. เรียนให้จบบท</div>
+          <div className="rounded-lg bg-white/70 p-3">3. กลับมาทำการบ้านที่นี่</div>
+        </div>
+        <Link href="/learn" className="mt-3 inline-flex rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white">
+          ไปเริ่มบทเรียน
+        </Link>
+      </div>
 
       <div className="flex gap-2 overflow-x-auto pb-1">
         {tabs.map((t) => (
@@ -82,7 +99,8 @@ export default async function HomeworkPage({ searchParams }: { searchParams: Pro
 
       {assignments.length === 0 ? (
         <div className="bg-white rounded-xl border p-10 text-center">
-          <p className="text-gray-400">ไม่มีการบ้าน</p>
+          <p className="font-medium text-gray-700">ยังไม่มีการบ้าน</p>
+          <p className="text-sm text-gray-400 mt-1">เรียนจบบทแรกก่อน แล้วระบบจะเพิ่มการบ้านให้เอง</p>
         </div>
       ) : (
         <div className="space-y-3">

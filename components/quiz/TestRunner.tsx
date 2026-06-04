@@ -83,7 +83,10 @@ export default function TestRunner({ test }: { test: Test }) {
 
   useEffect(() => {
     if (!started || timeLeft === null) return;
-    if (timeLeft <= 0) { handleSubmit(); return; }
+    if (timeLeft <= 0) {
+      const t = setTimeout(() => handleSubmit(), 0);
+      return () => clearTimeout(t);
+    }
     const t = setTimeout(() => setTimeLeft((s) => (s ?? 1) - 1), 1000);
     return () => clearTimeout(t);
   }, [started, timeLeft, handleSubmit]);
@@ -137,8 +140,10 @@ export default function TestRunner({ test }: { test: Test }) {
               <button
                 key={i}
                 onClick={() => { if (!showExplanation) setAnswers((a) => ({ ...a, [q.questionId]: opt })); }}
-                className={`w-full text-left px-4 py-2.5 rounded-lg border text-sm transition-colors ${
-                  answers[q.questionId] === opt ? "border-blue-500 bg-blue-50 text-blue-800" : "border-gray-200 hover:border-blue-200"
+                className={`w-full text-left px-4 py-3 rounded-lg border text-sm font-medium transition-colors ${
+                  answers[q.questionId] === opt
+                    ? "border-blue-500 bg-blue-50 text-blue-900 shadow-sm"
+                    : "border-gray-200 bg-white text-gray-800 hover:border-blue-300 hover:bg-blue-50/40"
                 }`}
               >
                 {opt}

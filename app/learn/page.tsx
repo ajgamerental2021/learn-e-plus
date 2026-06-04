@@ -33,6 +33,10 @@ export default async function LearnPage() {
         {profile?.currentLevel && (
           <p className="text-sm text-gray-500 mt-1">ระดับ {profile.currentLevel.nameTh}</p>
         )}
+        <div className="mt-3 rounded-xl border border-gray-100 bg-white p-4 text-sm text-gray-600">
+          เริ่มจากคอร์สแรกในระดับของคุณ เรียนทีละบทตามลำดับ แล้วเมื่อกด “เรียนจบบทนี้แล้ว”
+          ระบบจะสร้างการบ้านของบทนั้นให้ในเมนูการบ้าน
+        </div>
       </div>
 
       {courses.length === 0 ? (
