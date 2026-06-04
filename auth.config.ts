@@ -4,6 +4,7 @@ const isProd = process.env.NODE_ENV === "production";
 
 export const authConfig: NextAuthConfig = {
   session: { strategy: "jwt" },
+  trustHost: true,
   pages: {
     signIn: "/auth/login",
     error: "/auth/login",
