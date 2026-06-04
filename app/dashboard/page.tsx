@@ -20,6 +20,87 @@ export default async function DashboardPage() {
   if (!session?.user?.id) redirect("/auth/login");
 
   const userId = session.user.id;
+  if (session.user.role === "PARENT") {
+    const links = await db.guardianStudent.findMany({
+      where: { guardianId: userId },
+      include: {
+        student: {
+          include: {
+            profile: { include: { currentLevel: { select: { nameTh: true, code: true } } } },
+            streak: { select: { currentStreak: true, longestStreak: true } },
+            lessonProgress: {
+              where: { status: "COMPLETED" },
+              orderBy: { completedAt: "desc" },
+              take: 1,
+              include: { lesson: { select: { nameTh: true } } },
+            },
+            _count: {
+              select: {
+                lessonProgress: { where: { status: "COMPLETED" } },
+                homeworkAssignments: { where: { status: { in: ["NOT_STARTED", "IN_PROGRESS", "SUBMITTED", "UNDER_REVIEW"] } } },
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-6 space-y-5">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">หน้าผู้ปกครอง</h1>
+            <p className="mt-1 text-sm text-gray-500">ติดตามบทเรียน การบ้าน และ notification ของนักเรียนที่ผูกกับบัญชีนี้</p>
+          </div>
+          <LinkButton href="/notifications" variant="outline">ดูแจ้งเตือน</LinkButton>
+        </div>
+
+        {links.length === 0 ? (
+          <div className="rounded-xl border bg-white p-5 text-center">
+            <p className="font-medium text-gray-800">ยังไม่ได้ผูกนักเรียน</p>
+            <p className="mt-1 text-sm text-gray-500">ให้ Admin ผูกบัญชีผู้ปกครองกับนักเรียนที่หน้า Admin Users</p>
+          </div>
+        ) : (
+          <div className="grid gap-4">
+            {links.map(({ student }) => {
+              const latest = student.lessonProgress[0];
+              return (
+                <div key={student.id} className="rounded-xl border bg-white p-4">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <h2 className="font-semibold text-gray-800">{student.profile?.displayName ?? student.email}</h2>
+                      <p className="mt-1 text-xs text-gray-400">
+                        {student.profile?.currentLevel?.nameTh ?? "ยังไม่ได้กำหนดระดับ"} · streak {student.streak?.currentStreak ?? 0} วัน
+                      </p>
+                    </div>
+                    <Badge variant="secondary" className="text-xs">
+                      นักเรียน
+                    </Badge>
+                  </div>
+                  <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                    <div className="rounded-lg border bg-blue-50 p-3">
+                      <p className="text-xl font-bold text-blue-800">{student._count.lessonProgress}</p>
+                      <p className="text-xs text-blue-600">บทเรียนที่จบ</p>
+                    </div>
+                    <div className="rounded-lg border bg-amber-50 p-3">
+                      <p className="text-xl font-bold text-amber-800">{student._count.homeworkAssignments}</p>
+                      <p className="text-xs text-amber-600">การบ้านค้าง/รอตรวจ</p>
+                    </div>
+                    <div className="rounded-lg border bg-gray-50 p-3">
+                      <p className="text-sm font-semibold text-gray-800">{latest?.lesson.nameTh ?? "ยังไม่มี"}</p>
+                      <p className="mt-1 text-xs text-gray-500">บทล่าสุด</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   const dueSoonAt = new Date();
   dueSoonAt.setDate(dueSoonAt.getDate() + 2);
 

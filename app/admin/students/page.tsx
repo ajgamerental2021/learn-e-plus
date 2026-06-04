@@ -6,7 +6,8 @@ import Link from "next/link";
 export default async function StudentsPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/auth/login");
-  if (!["ADMIN", "TEACHER"].includes((session.user as any).role)) redirect("/dashboard");
+  const role = (session.user as { role?: string }).role;
+  if (!["ADMIN", "TEACHER"].includes(role ?? "")) redirect("/dashboard");
 
   const students = await db.user.findMany({
     where: { role: "LEARNER", isActive: true },

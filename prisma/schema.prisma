@@ -121,6 +121,7 @@ enum NotificationType {
   HOMEWORK_DUE_SOON
   HOMEWORK_DUE_TODAY
   HOMEWORK_OVERDUE
+  LESSON_COMPLETED
   NEW_TEST
   WEEKLY_TEST
   MONTHLY_REPORT
@@ -177,8 +178,26 @@ model User {
   monthlyReports         MonthlyReport[]
   notifications          Notification[]
   scheduledNotifications ScheduledNotification[]
+  guardianStudents       GuardianStudent[]     @relation("GuardianStudents")
+  studentGuardians       GuardianStudent[]     @relation("StudentGuardians")
   accounts               Account[]
   sessions               Session[]
+}
+
+model GuardianStudent {
+  id         String   @id @default(cuid())
+  guardianId String
+  studentId  String
+  assignedBy String?
+  note       String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  guardian User @relation("GuardianStudents", fields: [guardianId], references: [id], onDelete: Cascade)
+  student  User @relation("StudentGuardians", fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([guardianId, studentId])
+  @@index([studentId])
 }
 
 // NextAuth required models

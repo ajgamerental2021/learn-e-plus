@@ -7,8 +7,9 @@ const { auth } = NextAuth(authConfig);
 export default auth((req) => {
   const { nextUrl, auth: session } = req;
   const isLoggedIn = !!session;
-  const role = (session?.user as any)?.role;
-  const onboardingDone = (session?.user as any)?.onboardingDone;
+  const sessionUser = session?.user as { role?: string; onboardingDone?: boolean } | undefined;
+  const role = sessionUser?.role;
+  const onboardingDone = sessionUser?.onboardingDone;
 
   const isAdminRoute = nextUrl.pathname.startsWith("/admin");
   const isLearnerRoute =
@@ -29,7 +30,7 @@ export default auth((req) => {
 
   if (isAdminRoute) {
     if (!isLoggedIn) return NextResponse.redirect(new URL("/auth/login", nextUrl));
-    if (role !== "ADMIN") return NextResponse.redirect(new URL("/dashboard", nextUrl));
+    if (role !== "ADMIN" && role !== "TEACHER") return NextResponse.redirect(new URL("/dashboard", nextUrl));
   }
 
   if (isLearnerRoute) {

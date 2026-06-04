@@ -7,7 +7,8 @@ export default async function StudentDetailPage({ params }: { params: Promise<{ 
   const { id } = await params;
   const session = await auth();
   if (!session?.user?.id) redirect("/auth/login");
-  if (!["ADMIN", "TEACHER"].includes((session.user as any).role)) redirect("/dashboard");
+  const role = (session.user as { role?: string }).role;
+  if (!["ADMIN", "TEACHER"].includes(role ?? "")) redirect("/dashboard");
 
   const student = await db.user.findUnique({
     where: { id },

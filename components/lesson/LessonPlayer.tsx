@@ -1,11 +1,9 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { LinkButton } from "@/components/ui/link-button";
-import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import ContentRenderer from "./ContentRenderer";
 
@@ -44,14 +42,14 @@ const SKILL_COLOR: Record<string, string> = {
 };
 
 export default function LessonPlayer({ lessonId }: { lessonId: string }) {
-  const router = useRouter();
   const [lesson, setLesson] = useState<LessonData | null>(null);
   const [loading, setLoading] = useState(true);
   const [completing, setCompleting] = useState(false);
   const [completed, setCompleted] = useState(false);
-  const startTimeRef = useRef<number>(Date.now());
+  const startTimeRef = useRef<number | null>(null);
 
   useEffect(() => {
+    startTimeRef.current = Date.now();
     fetch(`/api/lessons/${lessonId}`)
       .then((r) => r.json())
       .then((d) => {
@@ -64,7 +62,8 @@ export default function LessonPlayer({ lessonId }: { lessonId: string }) {
   async function completeLesson() {
     if (!lesson) return;
     setCompleting(true);
-    const timeSpentSecs = Math.round((Date.now() - startTimeRef.current) / 1000);
+    const startedAt = startTimeRef.current ?? Date.now();
+    const timeSpentSecs = Math.round((Date.now() - startedAt) / 1000);
 
     await fetch(`/api/lessons/${lessonId}/complete`, {
       method: "POST",
@@ -75,17 +74,6 @@ export default function LessonPlayer({ lessonId }: { lessonId: string }) {
     setCompleted(true);
     setCompleting(false);
   }
-
-  function goNext() {
-    if (lesson?.nextLesson) {
-      router.push(`/learn/${lesson.unit.course.id}/${lesson.id.split("-")[0]}/placeholder`);
-      // Use the actual next lesson URL
-      router.push(`/learn/lesson/${lesson.nextLesson.id}`);
-    } else {
-      router.push(`/learn/${lesson?.unit.course.id}`);
-    }
-  }
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">

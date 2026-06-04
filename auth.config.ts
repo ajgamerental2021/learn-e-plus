@@ -1,6 +1,7 @@
 import type { NextAuthConfig } from "next-auth";
 
 const isProd = process.env.NODE_ENV === "production";
+type AppSessionFields = { role?: string; onboardingDone?: boolean };
 
 export const authConfig: NextAuthConfig = {
   session: { strategy: "jwt" },
@@ -24,17 +25,19 @@ export const authConfig: NextAuthConfig = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
+        const appUser = user as typeof user & AppSessionFields;
         token.id = user.id;
-        token.role = (user as any).role;
-        token.onboardingDone = (user as any).onboardingDone;
+        token.role = appUser.role ?? "LEARNER";
+        token.onboardingDone = appUser.onboardingDone ?? false;
       }
       return token;
     },
     async session({ session, token }) {
       if (token) {
+        const sessionUser = session.user as typeof session.user & AppSessionFields;
         session.user.id = token.id as string;
-        (session.user as any).role = token.role;
-        (session.user as any).onboardingDone = token.onboardingDone;
+        sessionUser.role = typeof token.role === "string" ? token.role : "LEARNER";
+        sessionUser.onboardingDone = typeof token.onboardingDone === "boolean" ? token.onboardingDone : false;
       }
       return session;
     },

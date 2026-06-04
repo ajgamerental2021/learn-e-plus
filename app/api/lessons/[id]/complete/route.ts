@@ -3,6 +3,7 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { checkAndAwardAchievements } from "@/lib/achievements";
+import { notifyLessonCompleted } from "@/lib/lesson-notifications";
 
 const schema = z.object({
   score: z.number().int().min(0).max(100).optional(),
@@ -22,6 +23,10 @@ export async function POST(
   const { score, timeSpentSecs } = parsed.success ? parsed.data : {};
 
   const now = new Date();
+  const previousProgress = await db.userLessonProgress.findUnique({
+    where: { userId_lessonId: { userId: session.user.id, lessonId } },
+    select: { status: true },
+  });
 
   // Upsert lesson progress → COMPLETED
   await db.userLessonProgress.upsert({
@@ -52,6 +57,9 @@ export async function POST(
   // Auto-assign homework for this lesson
   await autoAssignHomework(session.user.id, lessonId);
   await checkAndAwardAchievements(session.user.id);
+  if (previousProgress?.status !== "COMPLETED") {
+    await notifyLessonCompleted(session.user.id, lessonId);
+  }
 
   return NextResponse.json({ success: true });
 }

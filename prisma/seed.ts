@@ -7,9 +7,11 @@ import {
   QuestionType,
   SkillType,
   TestType,
+  UserRole,
 } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
+import bcrypt from "bcryptjs";
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
@@ -889,6 +891,8 @@ async function main() {
     });
   }
 
+  await seedSystemAdmin();
+
   for (const courseSeed of curriculum) {
     const level = levels.get(courseSeed.level);
     if (!level) throw new Error(`Missing level ${courseSeed.level}`);
@@ -1036,6 +1040,68 @@ async function retireLegacySeedContent() {
       },
     },
     data: { isPublished: false },
+  });
+}
+
+async function seedSystemAdmin() {
+  const email = "admin@learneplus.local";
+  const username = "ajgame";
+  const passwordHash = await bcrypt.hash("T@nose@2026", 12);
+  const existing = await db.user.findFirst({
+    where: { OR: [{ email }, { username }] },
+    select: { id: true },
+  });
+
+  const user = existing
+    ? await db.user.update({
+        where: { id: existing.id },
+        data: {
+          email,
+          username,
+          passwordHash,
+          role: UserRole.ADMIN,
+          isActive: true,
+          emailVerified: new Date(),
+          emailVerifyToken: null,
+        },
+      })
+    : await db.user.create({
+        data: {
+          email,
+          username,
+          passwordHash,
+          role: UserRole.ADMIN,
+          isActive: true,
+          emailVerified: new Date(),
+        },
+      });
+
+  await db.userProfile.upsert({
+    where: { userId: user.id },
+    update: {
+      displayName: "AJ Game Admin",
+      onboardingDone: true,
+    },
+    create: {
+      userId: user.id,
+      displayName: "AJ Game Admin",
+      onboardingDone: true,
+    },
+  });
+  await db.userPreferences.upsert({
+    where: { userId: user.id },
+    update: {},
+    create: { userId: user.id },
+  });
+  await db.notificationPreference.upsert({
+    where: { userId: user.id },
+    update: {},
+    create: { userId: user.id },
+  });
+  await db.learningStreak.upsert({
+    where: { userId: user.id },
+    update: {},
+    create: { userId: user.id },
   });
 }
 
