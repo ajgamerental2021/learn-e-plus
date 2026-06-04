@@ -52,7 +52,7 @@ type CourseSeed = {
 };
 
 const levelMeta: Record<LevelCode, { nameTh: string; nameEn: string; description: string; order: number; active: boolean }> = {
-  PRE_A1: { nameTh: "เริ่มต้น (Starter)", nameEn: "Starter", description: "เริ่มจากศูนย์ อ่านคำง่าย ๆ และพูดประโยคสั้น", order: 1, active: true },
+  PRE_A1: { nameTh: "เริ่มต้น (Starter)", nameEn: "Starter", description: "เริ่มจาก A-Z อ่านคำง่าย ๆ และพูดประโยคสั้น", order: 1, active: true },
   A1: { nameTh: "ผู้เริ่มต้น (Beginner)", nameEn: "Beginner", description: "สื่อสารเรื่องใกล้ตัวด้วยประโยคพื้นฐาน", order: 2, active: true },
   A2: { nameTh: "ขั้นต้น (Elementary)", nameEn: "Elementary", description: "สนทนาชีวิตประจำวันและเล่าเรื่องสั้น", order: 3, active: true },
   B1: { nameTh: "ระดับกลาง (Intermediate)", nameEn: "Intermediate", description: "อธิบายประสบการณ์ แผน และความคิดเห็น", order: 4, active: true },
@@ -108,18 +108,141 @@ function lesson(
   };
 }
 
+type LetterSeed = {
+  letter: string;
+  pronunciation: string;
+  word: string;
+  wordTh: string;
+  wordPronunciation: string;
+};
+
+const alphabetLetters: LetterSeed[] = [
+  { letter: "A a", pronunciation: "เอ", word: "apple", wordTh: "แอปเปิ้ล", wordPronunciation: "แอป-เพิล" },
+  { letter: "B b", pronunciation: "บี", word: "book", wordTh: "หนังสือ", wordPronunciation: "บุ๊ก" },
+  { letter: "C c", pronunciation: "ซี", word: "cat", wordTh: "แมว", wordPronunciation: "แคท" },
+  { letter: "D d", pronunciation: "ดี", word: "dog", wordTh: "สุนัข", wordPronunciation: "ด็อก" },
+  { letter: "E e", pronunciation: "อี", word: "egg", wordTh: "ไข่", wordPronunciation: "เอ็ก" },
+  { letter: "F f", pronunciation: "เอฟ", word: "fish", wordTh: "ปลา", wordPronunciation: "ฟิช" },
+  { letter: "G g", pronunciation: "จี", word: "girl", wordTh: "เด็กผู้หญิง", wordPronunciation: "เกิร์ล" },
+  { letter: "H h", pronunciation: "เอช", word: "hat", wordTh: "หมวก", wordPronunciation: "แฮท" },
+  { letter: "I i", pronunciation: "ไอ", word: "ink", wordTh: "หมึก", wordPronunciation: "อิงค์" },
+  { letter: "J j", pronunciation: "เจ", word: "juice", wordTh: "น้ำผลไม้", wordPronunciation: "จูซ" },
+  { letter: "K k", pronunciation: "เค", word: "kite", wordTh: "ว่าว", wordPronunciation: "ไคท์" },
+  { letter: "L l", pronunciation: "แอล", word: "lion", wordTh: "สิงโต", wordPronunciation: "ไล-เอิน" },
+  { letter: "M m", pronunciation: "เอ็ม", word: "moon", wordTh: "ดวงจันทร์", wordPronunciation: "มูน" },
+  { letter: "N n", pronunciation: "เอ็น", word: "nose", wordTh: "จมูก", wordPronunciation: "โนซ" },
+  { letter: "O o", pronunciation: "โอ", word: "orange", wordTh: "ส้ม", wordPronunciation: "ออ-เรินจ์" },
+  { letter: "P p", pronunciation: "พี", word: "pen", wordTh: "ปากกา", wordPronunciation: "เพ็น" },
+  { letter: "Q q", pronunciation: "คิว", word: "queen", wordTh: "ราชินี", wordPronunciation: "ควีน" },
+  { letter: "R r", pronunciation: "อาร์", word: "rabbit", wordTh: "กระต่าย", wordPronunciation: "แรบ-บิท" },
+  { letter: "S s", pronunciation: "เอส", word: "sun", wordTh: "พระอาทิตย์", wordPronunciation: "ซัน" },
+  { letter: "T t", pronunciation: "ที", word: "tiger", wordTh: "เสือ", wordPronunciation: "ไท-เกอร์" },
+  { letter: "U u", pronunciation: "ยู", word: "umbrella", wordTh: "ร่ม", wordPronunciation: "อัม-เบรล-ละ" },
+  { letter: "V v", pronunciation: "วี", word: "van", wordTh: "รถตู้", wordPronunciation: "แวน" },
+  { letter: "W w", pronunciation: "ดับเบิลยู", word: "water", wordTh: "น้ำ", wordPronunciation: "วอ-เทอร์" },
+  { letter: "X x", pronunciation: "เอ็กซ์", word: "x-ray", wordTh: "เอกซเรย์", wordPronunciation: "เอ็กซ์-เรย์" },
+  { letter: "Y y", pronunciation: "วาย", word: "yellow", wordTh: "สีเหลือง", wordPronunciation: "เยล-โล" },
+  { letter: "Z z", pronunciation: "ซี/เซ็ด", word: "zebra", wordTh: "ม้าลาย", wordPronunciation: "ซี-บรา" },
+];
+
+function letterPhrase(item: LetterSeed): Phrase {
+  const firstLetter = item.letter[0];
+  return phrase(item.letter, `${item.pronunciation} - ${item.word} - ${item.wordTh} (${item.wordPronunciation})`, `${firstLetter} is for ${item.word}.`, item.pronunciation);
+}
+
+function letterLesson(
+  slug: string,
+  nameTh: string,
+  nameEn: string,
+  outcome: string,
+  pattern: string,
+  letters: LetterSeed[],
+  minutes = 10
+) {
+  return lesson(
+    slug,
+    nameTh,
+    nameEn,
+    SkillType.VOCABULARY,
+    outcome,
+    pattern,
+    letters.map(letterPhrase),
+    letters.slice(0, 4).map((item) => ({ sentence: `${item.letter[0]} is for _____.`, answer: item.word, hint: `${item.letter[0]} = ${item.wordTh}` })),
+    minutes
+  );
+}
+
 const curriculum: CourseSeed[] = [
   {
     level: LevelCode.PRE_A1,
     nameTh: "English Starter Path",
     nameEn: "English Starter Path",
-    descriptionTh: "พื้นฐานตั้งแต่ตัวอักษร ตัวเลข คำใกล้ตัว และประโยคสั้นมาก",
+    descriptionTh: "พื้นฐานตั้งแต่ท่อง A-Z ตัวเลข คำใกล้ตัว และประโยคสั้นมาก",
     units: [
       {
+        slug: "alphabet-bootcamp",
+        nameTh: "A-Z Bootcamp: เริ่มจากศูนย์",
+        nameEn: "A-Z Bootcamp",
+        descriptionTh: "ท่องตัวอักษร A-Z พร้อมคำศัพท์ประจำตัวอักษรก่อนเริ่มอ่านประโยค",
+        lessons: [
+          letterLesson(
+            "az-chart",
+            "Chart A-Z สำหรับท่องจำ",
+            "A-Z Recitation Chart",
+            "เห็นภาพรวมตัวอักษร A-Z ทั้งตัวพิมพ์ใหญ่และตัวพิมพ์เล็ก พร้อมคำศัพท์ตัวอย่างครบ 26 ตัว",
+            "A is for apple. B is for book. Say the letter, then say the word.",
+            alphabetLetters,
+            15
+          ),
+          letterLesson(
+            "letters-a-f",
+            "ท่องตัวอักษร A-F",
+            "Letters A-F",
+            "จำชื่อและเสียงอ่านของ A ถึง F พร้อมคำศัพท์ apple, book, cat, dog, egg, fish",
+            "A is for apple. Repeat: A, apple.",
+            alphabetLetters.slice(0, 6)
+          ),
+          letterLesson(
+            "letters-g-l",
+            "ท่องตัวอักษร G-L",
+            "Letters G-L",
+            "จำชื่อและเสียงอ่านของ G ถึง L พร้อมคำศัพท์ girl, hat, ink, juice, kite, lion",
+            "G is for girl. Repeat: G, girl.",
+            alphabetLetters.slice(6, 12)
+          ),
+          letterLesson(
+            "letters-m-r",
+            "ท่องตัวอักษร M-R",
+            "Letters M-R",
+            "จำชื่อและเสียงอ่านของ M ถึง R พร้อมคำศัพท์ moon, nose, orange, pen, queen, rabbit",
+            "M is for moon. Repeat: M, moon.",
+            alphabetLetters.slice(12, 18)
+          ),
+          letterLesson(
+            "letters-s-z",
+            "ท่องตัวอักษร S-Z",
+            "Letters S-Z",
+            "จำชื่อและเสียงอ่านของ S ถึง Z พร้อมคำศัพท์ sun, tiger, umbrella, van, water, x-ray, yellow, zebra",
+            "S is for sun. Repeat: S, sun.",
+            alphabetLetters.slice(18)
+          ),
+          lesson("alphabet-review", "ทบทวน A-Z ทั้งหมด", "Alphabet Review", SkillType.SPEAKING, "พูด A-Z ตามลำดับและเลือกคำศัพท์ตัวอย่างได้อย่างน้อย 10 ตัว", "Say A to Z. Then say: A apple, B book, C cat.", [
+            phrase("A to Z", "ท่องจาก A ถึง Z", "I can say A to Z.", "เอ ทู ซี"),
+            phrase("capital letter", "ตัวพิมพ์ใหญ่", "A is a capital letter."),
+            phrase("small letter", "ตัวพิมพ์เล็ก", "a is a small letter."),
+            phrase("letter word", "คำศัพท์ประจำตัวอักษร", "A has the word apple."),
+          ], [
+            { sentence: "Say A to _____.", answer: "Z", hint: "ตัวสุดท้ายของ alphabet" },
+            { sentence: "A is for _____.", answer: "apple" },
+            { sentence: "Z is for _____.", answer: "zebra" },
+          ], 12),
+        ],
+      },
+      {
         slug: "letters-sounds",
-        nameTh: "ตัวอักษรและเสียง",
+        nameTh: "ตัวอักษรและเสียงขั้นต่อไป",
         nameEn: "Letters and Sounds",
-        descriptionTh: "รู้จักตัวอักษร สระ และเสียงเริ่มต้น",
+        descriptionTh: "ทบทวนตัวอักษร สระ และเสียงเริ่มต้นหลังผ่าน A-Z Bootcamp",
         lessons: [
           lesson("alphabet-a-m", "ตัวอักษร A-M", "Alphabet A-M", SkillType.VOCABULARY, "จำตัวอักษร A ถึง M และคำตัวอย่าง", "A is for apple. B is for book.", [
             phrase("A a", "เอ - apple - แอปเปิ้ล", "A is for apple.", "เอ"),
@@ -980,8 +1103,14 @@ async function seedLessonContent(lessonIdValue: string, lessonSeed: LessonSeed) 
 }
 
 async function seedHomework(lessonIdValue: string, unitIdValue: string, lessonSeed: LessonSeed) {
+  const isAlphabetPractice =
+    lessonSeed.slug.includes("alphabet") ||
+    lessonSeed.slug.includes("letters-") ||
+    lessonSeed.slug.includes("az-chart");
   const prompt =
-    lessonSeed.skill === SkillType.WRITING
+    isAlphabetPractice
+      ? `ท่อง "${lessonSeed.nameTh}" วันละ 3 รอบ เขียนตัวพิมพ์ใหญ่/เล็กของแต่ละตัวอย่างละ 5 รอบ แล้วเลือกคำศัพท์ประจำตัวอักษร 5 คำมาอ่านออกเสียงพร้อมความหมายภาษาไทย`
+      : lessonSeed.skill === SkillType.WRITING
       ? `เขียน 5-6 ประโยคเกี่ยวกับ "${lessonSeed.nameTh}" โดยใช้คำ/รูปแบบจากบทเรียนอย่างน้อย 3 รายการ`
       : lessonSeed.skill === SkillType.SPEAKING
         ? `อัด/เขียน script สั้น ๆ 6 บรรทัดเกี่ยวกับ "${lessonSeed.nameTh}" แล้วส่งข้อความสรุปสิ่งที่พูด`
