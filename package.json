@@ -12,7 +12,7 @@
     "db:seed": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' prisma/seed.ts",
     "db:studio": "prisma studio",
     "db:generate": "prisma generate",
-    "build:apk": "node node_modules/next/dist/bin/next build && cap sync android && cap build android"
+    "build:apk": "node node_modules/next/dist/bin/next build && cap sync android && cd android && ./gradlew assembleDebug"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.99.0",
