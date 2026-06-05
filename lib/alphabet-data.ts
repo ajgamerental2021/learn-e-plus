@@ -11,12 +11,13 @@ export type AlphabetLetter = {
   letter: string;
   lower: string;
   pronunciationTh: string;
+  speechText: string;
   soundHint: string;
   starterWord: AlphabetWord;
   words: AlphabetWord[];
 };
 
-export const alphabetLetters: AlphabetLetter[] = [
+const baseAlphabetLetters: AlphabetLetter[] = [
   letter("A", "เอ", "แอะ/เอ", [
     word("apple", "แอป-เพิล", "แอปเปิ้ล", "I eat an apple.", "ฉันกินแอปเปิ้ล", "🍎"),
     word("ant", "แอนท์", "มด", "An ant is small.", "มดตัวเล็ก", "🐜"),
@@ -184,6 +185,7 @@ function letter(letterValue: string, pronunciationTh: string, soundHint: string,
     letter: letterValue,
     lower: letterValue.toLowerCase(),
     pronunciationTh,
+    speechText: letterValue,
     soundHint,
     starterWord: words[0],
     words,
@@ -193,3 +195,208 @@ function letter(letterValue: string, pronunciationTh: string, soundHint: string,
 function word(wordValue: string, pronunciationTh: string, translationTh: string, example: string, exampleTh: string, icon: string): AlphabetWord {
   return { word: wordValue, pronunciationTh, translationTh, example, exampleTh, icon };
 }
+
+function basicWord(wordValue: string, pronunciationTh: string, translationTh: string, icon: string): AlphabetWord {
+  const article = /^[aeiou]/i.test(wordValue) ? "an" : "a";
+  return word(wordValue, pronunciationTh, translationTh, `This is ${article} ${wordValue}.`, `นี่คือ${translationTh}`, icon);
+}
+
+const letterSpeech: Record<string, string> = {
+  A: "ay",
+  B: "bee",
+  C: "see",
+  D: "dee",
+  E: "ee",
+  F: "eff",
+  G: "gee",
+  H: "aitch",
+  I: "eye",
+  J: "jay",
+  K: "kay",
+  L: "ell",
+  M: "em",
+  N: "en",
+  O: "oh",
+  P: "pee",
+  Q: "cue",
+  R: "are",
+  S: "ess",
+  T: "tee",
+  U: "you",
+  V: "vee",
+  W: "double you",
+  X: "ex",
+  Y: "why",
+  Z: "zee",
+};
+
+const extraWords: Record<string, AlphabetWord[]> = {
+  A: [
+    basicWord("alligator", "แอ-ลิ-เก-เทอร์", "จระเข้", "🐊"),
+    basicWord("anchor", "แอง-เคอร์", "สมอเรือ", "⚓"),
+    basicWord("arrow", "แอ-โร", "ลูกศร", "➡️"),
+    basicWord("astronaut", "แอส-โทร-นอต", "นักบินอวกาศ", "🧑‍🚀"),
+  ],
+  B: [
+    basicWord("banana", "บะ-แน-นา", "กล้วย", "🍌"),
+    basicWord("bird", "เบิร์ด", "นก", "🐦"),
+    basicWord("boat", "โบท", "เรือ", "⛵"),
+    basicWord("box", "บ็อกซ์", "กล่อง", "📦"),
+  ],
+  C: [
+    basicWord("cow", "คาว", "วัว", "🐄"),
+    basicWord("chair", "แชร์", "เก้าอี้", "🪑"),
+    basicWord("cookie", "คุก-กี้", "คุกกี้", "🍪"),
+    basicWord("crown", "คราวน์", "มงกุฎ", "👑"),
+  ],
+  D: [
+    basicWord("doll", "ดอล", "ตุ๊กตา", "🪆"),
+    basicWord("drum", "ดรัม", "กลอง", "🥁"),
+    basicWord("dinosaur", "ได-นะ-ซอร์", "ไดโนเสาร์", "🦕"),
+    basicWord("diamond", "ได-มอนด์", "เพชร", "💎"),
+  ],
+  E: [
+    basicWord("eraser", "อิ-เร-เซอร์", "ยางลบ", "🧽"),
+    basicWord("engine", "เอ็น-จิน", "เครื่องยนต์", "⚙️"),
+    basicWord("envelope", "เอ็น-เว-โลพ", "ซองจดหมาย", "✉️"),
+    basicWord("eagle", "อี-เกิล", "นกอินทรี", "🦅"),
+  ],
+  F: [
+    basicWord("frog", "ฟร็อก", "กบ", "🐸"),
+    basicWord("flag", "แฟล็ก", "ธง", "🚩"),
+    basicWord("flower", "ฟลาว-เวอร์", "ดอกไม้", "🌼"),
+    basicWord("fork", "ฟอร์ก", "ส้อม", "🍴"),
+  ],
+  G: [
+    basicWord("grape", "เกรพ", "องุ่น", "🍇"),
+    basicWord("glass", "กลาส", "แก้ว", "🥛"),
+    basicWord("glove", "กลัฟ", "ถุงมือ", "🧤"),
+    basicWord("guitar", "กิ-ทาร์", "กีตาร์", "🎸"),
+  ],
+  H: [
+    basicWord("horse", "ฮอร์ส", "ม้า", "🐴"),
+    basicWord("house", "เฮาส์", "บ้าน", "🏡"),
+    basicWord("heart", "ฮาร์ท", "หัวใจ", "❤️"),
+    basicWord("hamburger", "แฮม-เบอร์-เกอร์", "แฮมเบอร์เกอร์", "🍔"),
+  ],
+  I: [
+    basicWord("island", "ไอ-แลนด์", "เกาะ", "🏝️"),
+    basicWord("iguana", "อิ-กวา-นา", "อีกัวนา", "🦎"),
+    basicWord("idea", "ไอ-เดีย", "ความคิด", "💡"),
+    basicWord("instrument", "อิน-สทรู-เมินท์", "เครื่องดนตรี", "🎼"),
+  ],
+  J: [
+    basicWord("jacket", "แจค-เก็ต", "เสื้อแจ็กเก็ต", "🧥"),
+    basicWord("jelly", "เจล-ลี่", "เยลลี่", "🍮"),
+    basicWord("jeep", "จีพ", "รถจี๊ป", "🚙"),
+    basicWord("jewel", "จู-เวล", "อัญมณี", "💍"),
+  ],
+  K: [
+    basicWord("kangaroo", "แคง-กะ-รู", "จิงโจ้", "🦘"),
+    basicWord("koala", "โค-อา-ละ", "โคอาลา", "🐨"),
+    basicWord("kettle", "เคท-เทิล", "กาต้มน้ำ", "🫖"),
+    basicWord("kiwi", "คี-วี", "กีวี", "🥝"),
+  ],
+  L: [
+    basicWord("lemon", "เลม-มอน", "มะนาว", "🍋"),
+    basicWord("ladder", "แลด-เดอร์", "บันได", "🪜"),
+    basicWord("lock", "ล็อก", "กุญแจล็อก", "🔒"),
+    basicWord("lollipop", "ลอล-ลิ-พ็อพ", "อมยิ้ม", "🍭"),
+  ],
+  M: [
+    basicWord("monkey", "มัง-คี", "ลิง", "🐵"),
+    basicWord("mouse", "เมาส์", "หนู", "🐭"),
+    basicWord("mango", "แมง-โก", "มะม่วง", "🥭"),
+    basicWord("magnet", "แมก-เน็ต", "แม่เหล็ก", "🧲"),
+  ],
+  N: [
+    basicWord("nurse", "เนิร์ส", "พยาบาล", "🧑‍⚕️"),
+    basicWord("nut", "นัท", "ถั่ว", "🥜"),
+    basicWord("noodle", "นู-เดิล", "เส้นก๋วยเตี๋ยว", "🍜"),
+    basicWord("notebook", "โนท-บุ๊ก", "สมุด", "📓"),
+  ],
+  O: [
+    basicWord("ocean", "โอ-เชิน", "มหาสมุทร", "🌊"),
+    basicWord("onion", "อัน-เยิน", "หัวหอม", "🧅"),
+    basicWord("ostrich", "ออส-ทริช", "นกกระจอกเทศ", "🐦"),
+    basicWord("octopus", "อ็อก-ทะ-พัส", "ปลาหมึกยักษ์", "🐙"),
+  ],
+  P: [
+    basicWord("pencil", "เพน-ซิล", "ดินสอ", "✏️"),
+    basicWord("pizza", "พิซ-ซา", "พิซซ่า", "🍕"),
+    basicWord("panda", "แพน-ดา", "แพนด้า", "🐼"),
+    basicWord("pumpkin", "พัมพ์-คิน", "ฟักทอง", "🎃"),
+  ],
+  Q: [
+    basicWord("quail", "เควล", "นกกระทา", "🐦"),
+    basicWord("quilt", "ควิลท์", "ผ้าห่ม", "🛌"),
+    basicWord("question", "เควส-เชิน", "คำถาม", "❓"),
+    basicWord("quarter", "ควอร์-เทอร์", "หนึ่งส่วนสี่", "🪙"),
+  ],
+  R: [
+    basicWord("robot", "โร-บอท", "หุ่นยนต์", "🤖"),
+    basicWord("ring", "ริง", "แหวน", "💍"),
+    basicWord("rocket", "ร็อก-เก็ต", "จรวด", "🚀"),
+    basicWord("rose", "โรซ", "ดอกกุหลาบ", "🌹"),
+  ],
+  S: [
+    basicWord("ship", "ชิพ", "เรือใหญ่", "🚢"),
+    basicWord("snake", "สเนค", "งู", "🐍"),
+    basicWord("shoe", "ชู", "รองเท้า", "👟"),
+    basicWord("sandwich", "แซนด์-วิช", "แซนด์วิช", "🥪"),
+  ],
+  T: [
+    basicWord("table", "เท-เบิล", "โต๊ะ", "🪑"),
+    basicWord("train", "เทรน", "รถไฟ", "🚆"),
+    basicWord("turtle", "เทอร์-เทิล", "เต่า", "🐢"),
+    basicWord("tomato", "ทะ-เม-โท", "มะเขือเทศ", "🍅"),
+  ],
+  U: [
+    basicWord("unicorn", "ยู-นิ-คอร์น", "ยูนิคอร์น", "🦄"),
+    basicWord("ukulele", "ยู-คะ-เล-ลี", "อูคูเลเล่", "🎸"),
+    basicWord("utensil", "ยู-เทน-ซิล", "อุปกรณ์กินอาหาร", "🍴"),
+    basicWord("urchin", "เออร์-ชิน", "เม่นทะเล", "🪸"),
+  ],
+  V: [
+    basicWord("violin", "ไว-อะ-ลิน", "ไวโอลิน", "🎻"),
+    basicWord("vegetable", "เวจ-ทะ-เบิล", "ผัก", "🥦"),
+    basicWord("volcano", "วอล-เค-โน", "ภูเขาไฟ", "🌋"),
+    basicWord("village", "วิล-ลิจ", "หมู่บ้าน", "🏘️"),
+  ],
+  W: [
+    basicWord("watch", "วอทช์", "นาฬิกาข้อมือ", "⌚"),
+    basicWord("whale", "เวล", "วาฬ", "🐋"),
+    basicWord("wheel", "วีล", "ล้อ", "🛞"),
+    basicWord("worm", "เวิร์ม", "หนอน", "🪱"),
+  ],
+  X: [
+    basicWord("xylophone", "ไซ-ละ-โฟน", "ไซโลโฟน", "🎼"),
+    basicWord("axe", "แอกซ์", "ขวาน", "🪓"),
+    basicWord("mix", "มิกซ์", "การผสม", "🥣"),
+    basicWord("taxi", "แท็ก-ซี", "แท็กซี่", "🚕"),
+  ],
+  Y: [
+    basicWord("yacht", "ยอท", "เรือยอชต์", "⛵"),
+    basicWord("yarn", "ยาร์น", "เส้นไหมพรม", "🧶"),
+    basicWord("yogurt", "โย-เกิร์ต", "โยเกิร์ต", "🥣"),
+    basicWord("yolk", "โยค", "ไข่แดง", "🍳"),
+  ],
+  Z: [
+    basicWord("zipper", "ซิพ-เพอร์", "ซิป", "🤐"),
+    basicWord("zigzag", "ซิก-แซก", "เส้นซิกแซก", "〰️"),
+    basicWord("zone", "โซน", "เขต", "🧭"),
+    basicWord("zucchini", "ซู-คี-นี", "ซูกินี", "🥒"),
+  ],
+};
+
+export const alphabetLetters: AlphabetLetter[] = baseAlphabetLetters.map((item) => {
+  const words = [...item.words, ...(extraWords[item.letter] ?? [])];
+  return {
+    ...item,
+    speechText: letterSpeech[item.letter] ?? item.letter,
+    starterWord: words[0],
+    words,
+  };
+});
+
+export const alphabetSpeechText = alphabetLetters.map((item) => item.speechText).join(". ");

@@ -1175,7 +1175,7 @@ async function seedHomework(lessonIdValue: string, unitIdValue: string, lessonSe
     lessonSeed.slug.includes("az-chart");
   const prompt =
     isAlphabetPractice
-      ? `ท่อง "${lessonSeed.nameTh}" วันละ 3 รอบ เขียนตัวพิมพ์ใหญ่/เล็กของแต่ละตัวอย่างละ 5 รอบ แล้วเลือกคำศัพท์ประจำตัวอักษร 5 คำมาอ่านออกเสียงพร้อมความหมายภาษาไทย`
+      ? `Starter แบบง่าย: ท่อง "${lessonSeed.nameTh}" 1 รอบ ชี้ตัวพิมพ์ใหญ่/เล็ก แล้วเลือกคำศัพท์ที่จำได้อย่างน้อย 3 คำ ไม่ต้องเขียนยาว`
       : lessonSeed.skill === SkillType.WRITING
       ? `เขียน 5-6 ประโยคเกี่ยวกับ "${lessonSeed.nameTh}" โดยใช้คำ/รูปแบบจากบทเรียนอย่างน้อย 3 รายการ`
       : lessonSeed.skill === SkillType.SPEAKING

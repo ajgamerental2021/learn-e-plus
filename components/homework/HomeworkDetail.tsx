@@ -42,6 +42,9 @@ const STATUS_LABEL: Record<string, string> = {
 export default function HomeworkDetail({ assignment }: { assignment: Assignment }) {
   const router = useRouter();
   const [text, setText] = useState("");
+  const [azRound, setAzRound] = useState(false);
+  const [letterPractice, setLetterPractice] = useState(false);
+  const [selectedWords, setSelectedWords] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
@@ -50,16 +53,46 @@ export default function HomeworkDetail({ assignment }: { assignment: Assignment 
   const attemptsUsed = assignment.submissions.length;
   const canSubmit = assignment.status !== "COMPLETED" && attemptsUsed < maxAttempts;
   const latestSub = assignment.submissions[0];
+  const isStarterAlphabetHomework =
+    assignment.homework.nameTh.includes("A-Z") ||
+    assignment.homework.descriptionTh?.includes("A-Z") ||
+    assignment.homework.lesson?.nameTh.includes("A-Z") ||
+    assignment.homework.lesson?.nameTh.includes("ตัวอักษร");
+  const displayDescription = isStarterAlphabetHomework
+    ? "Starter แบบง่าย: ท่อง A-Z 1 รอบ ชี้ตัวพิมพ์ใหญ่/เล็ก แล้วเลือกคำศัพท์ที่จำได้อย่างน้อย 3 คำ ไม่ต้องเขียนยาว"
+    : assignment.homework.descriptionTh;
+  const starterWords = ["apple", "book", "cat", "dog", "egg", "fish", "hat", "sun"];
+
+  function toggleWord(word: string) {
+    setSelectedWords((prev) => prev.includes(word) ? prev.filter((item) => item !== word) : [...prev, word]);
+  }
 
   async function handleSubmit() {
     if (!text.trim()) { setError("กรุณาเขียนคำตอบ"); return; }
+    await submitText(text);
+  }
+
+  async function handleStarterSubmit() {
+    if (!azRound || !letterPractice || selectedWords.length < 3) {
+      setError("ทำให้ครบ 3 ขั้นก่อนส่ง: ท่อง A-Z, ฝึก A/a-Z/z, และเลือกคำศัพท์อย่างน้อย 3 คำ");
+      return;
+    }
+    await submitText([
+      "Starter A-Z homework",
+      "ท่อง A-Z แล้ว 1 รอบ",
+      "ฝึกดูตัวพิมพ์ใหญ่/ตัวพิมพ์เล็กแล้ว",
+      `คำศัพท์ที่เลือกท่อง: ${selectedWords.join(", ")}`,
+    ].join("\n"));
+  }
+
+  async function submitText(submissionText: string) {
     setError("");
     setSubmitting(true);
     try {
       const res = await fetch(`/api/homework/${assignment.id}/submit`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ submissionText: text }),
+        body: JSON.stringify({ submissionText }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? "เกิดข้อผิดพลาด"); return; }
@@ -96,8 +129,8 @@ export default function HomeworkDetail({ assignment }: { assignment: Assignment 
           </span>
           <span className="text-xs text-gray-400">{assignment.homework.skillType}</span>
         </div>
-        {assignment.homework.descriptionTh && (
-          <p className="text-sm text-gray-600">{assignment.homework.descriptionTh}</p>
+        {displayDescription && (
+          <p className="text-sm text-gray-600">{displayDescription}</p>
         )}
         <div className="flex gap-4 text-xs text-gray-400">
           <span>คะแนนเต็ม {assignment.homework.maxScore}</span>
@@ -129,24 +162,78 @@ export default function HomeworkDetail({ assignment }: { assignment: Assignment 
 
       {/* Submit form */}
       {canSubmit ? (
-        <div className="bg-white rounded-xl border p-4 space-y-3">
-          <p className="font-medium text-gray-800">เขียนคำตอบ / ส่งงาน</p>
-          <textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            rows={6}
-            placeholder="พิมพ์คำตอบหรือคำอธิบายงานที่ทำ..."
-            className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400 resize-none"
-          />
-          {error && <p className="text-sm text-red-500">{error}</p>}
-          <button
-            onClick={handleSubmit}
-            disabled={submitting}
-            className="w-full py-2.5 bg-blue-600 text-white rounded-xl font-semibold text-sm disabled:opacity-50"
-          >
-            {submitting ? "กำลังส่ง..." : "ส่งการบ้าน"}
-          </button>
-        </div>
+        isStarterAlphabetHomework ? (
+          <div className="bg-white rounded-xl border p-4 space-y-4">
+            <div>
+              <p className="font-semibold text-gray-800">การบ้าน Starter แบบง่าย</p>
+              <p className="mt-1 text-sm text-gray-500">ไม่ต้องเขียนยาว ให้เด็กทำทีละขั้นแล้วกดส่งได้เลย</p>
+            </div>
+
+            <label className={`flex items-start gap-3 rounded-lg border-2 p-3 ${azRound ? "border-green-300 bg-green-50" : "border-gray-200 bg-white"}`}>
+              <input type="checkbox" checked={azRound} onChange={(e) => setAzRound(e.target.checked)} className="mt-1 size-5" />
+              <span>
+                <span className="block font-medium text-gray-800">1. ท่อง A-Z 1 รอบ</span>
+                <span className="text-sm text-gray-500">พูดตาม Chart จาก A ถึง Z ช้า ๆ</span>
+              </span>
+            </label>
+
+            <label className={`flex items-start gap-3 rounded-lg border-2 p-3 ${letterPractice ? "border-green-300 bg-green-50" : "border-gray-200 bg-white"}`}>
+              <input type="checkbox" checked={letterPractice} onChange={(e) => setLetterPractice(e.target.checked)} className="mt-1 size-5" />
+              <span>
+                <span className="block font-medium text-gray-800">2. ชี้ตัวพิมพ์ใหญ่/เล็ก</span>
+                <span className="text-sm text-gray-500">เช่น A/a, B/b, C/c ไม่ต้องจำคำศัพท์ทุกคำในครั้งเดียว</span>
+              </span>
+            </label>
+
+            <div className="rounded-lg border-2 border-gray-200 p-3">
+              <p className="font-medium text-gray-800">3. เลือกคำศัพท์ที่ท่องได้อย่างน้อย 3 คำ</p>
+              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {starterWords.map((word) => {
+                  const active = selectedWords.includes(word);
+                  return (
+                    <button
+                      key={word}
+                      type="button"
+                      onClick={() => toggleWord(word)}
+                      className={`rounded-lg border-2 px-3 py-3 text-sm font-semibold ${active ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-200 bg-white text-gray-700"}`}
+                    >
+                      {word}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="mt-2 text-xs text-gray-400">เลือกแล้ว {selectedWords.length}/3 คำ</p>
+            </div>
+
+            {error && <p className="text-sm text-red-500">{error}</p>}
+            <button
+              onClick={handleStarterSubmit}
+              disabled={submitting}
+              className="w-full rounded-xl bg-blue-600 py-3 font-semibold text-white disabled:opacity-50"
+            >
+              {submitting ? "กำลังส่ง..." : "ส่งการบ้าน Starter"}
+            </button>
+          </div>
+        ) : (
+          <div className="bg-white rounded-xl border p-4 space-y-3">
+            <p className="font-medium text-gray-800">เขียนคำตอบ / ส่งงาน</p>
+            <textarea
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              rows={6}
+              placeholder="พิมพ์คำตอบหรือคำอธิบายงานที่ทำ..."
+              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400 resize-none"
+            />
+            {error && <p className="text-sm text-red-500">{error}</p>}
+            <button
+              onClick={handleSubmit}
+              disabled={submitting}
+              className="w-full py-2.5 bg-blue-600 text-white rounded-xl font-semibold text-sm disabled:opacity-50"
+            >
+              {submitting ? "กำลังส่ง..." : "ส่งการบ้าน"}
+            </button>
+          </div>
+        )
       ) : (
         <div className="bg-white rounded-xl border p-6 text-center">
           <p className="text-gray-500 text-sm">

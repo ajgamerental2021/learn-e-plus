@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { alphabetLetters } from "@/lib/alphabet-data";
+import { alphabetLetters, alphabetSpeechText } from "@/lib/alphabet-data";
 import SpeakButton from "@/components/alphabet/SpeakButton";
 
 export default async function AlphabetChartPage() {
@@ -19,7 +19,7 @@ export default async function AlphabetChartPage() {
               Chart ตัวอักษรอังกฤษ A-Z พร้อมคำอ่านไทยและคำศัพท์ตัวอย่าง กดตัวอักษรเพื่อเข้าไปฝึกคำศัพท์ของตัวนั้นเพิ่มเติม
             </p>
           </div>
-          <SpeakButton text="A B C D E F G H I J K L M N O P Q R S T U V W X Y Z" label="ฟัง A-Z" />
+          <SpeakButton text={alphabetSpeechText} label="ฟัง A-Z" />
         </div>
       </section>
 

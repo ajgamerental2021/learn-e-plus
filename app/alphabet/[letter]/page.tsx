@@ -37,13 +37,13 @@ export default async function AlphabetLetterPage({ params }: { params: Promise<{
             <p className="text-sm text-gray-500">เสียงเริ่มต้นโดยประมาณ: {item.soundHint}</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <SpeakButton text={item.letter} label={`ฟัง ${item.letter}`} />
+            <SpeakButton text={item.speechText} label={`ฟัง ${item.letter}`} />
             <SpeakButton text={item.words.map((word) => word.word).join(". ")} label="ฟังคำศัพท์" />
           </div>
         </div>
       </section>
 
-      <section className="grid gap-4">
+      <section className="grid gap-4 lg:grid-cols-2">
         {item.words.map((entry) => (
           <article key={entry.word} className="rounded-xl border bg-white p-5">
             <div className="flex flex-wrap items-start justify-between gap-3">
