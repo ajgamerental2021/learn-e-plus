@@ -94,6 +94,11 @@ export default async function DashboardPage() {
                       <p className="mt-1 text-xs text-gray-500">บทล่าสุด</p>
                     </div>
                   </div>
+                  <div className="mt-4">
+                    <LinkButton href={`/homework/vocabulary/submissions/${student.id}`} variant="outline" className="w-full justify-center">
+                      ดูประวัติท่องศัพท์ / ฟังเสียง
+                    </LinkButton>
+                  </div>
                 </div>
               );
             })}

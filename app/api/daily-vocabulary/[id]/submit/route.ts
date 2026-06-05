@@ -23,7 +23,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   const assignment = await db.dailyVocabularyAssignment.findFirst({
     where: { id, userId: session.user.id },
-    include: { vocabulary: true },
+    include: { vocabulary: true, user: { include: { profile: { select: { displayName: true } } } } },
   });
   if (!assignment) return NextResponse.json({ error: "ไม่พบการบ้านคำศัพท์วันนี้" }, { status: 404 });
 
@@ -57,6 +57,40 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       nextReviewAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
     },
   });
+
+  const studentName = assignment.user.profile?.displayName ?? assignment.user.email;
+  const reviewHref = `/homework/vocabulary/submissions/${assignment.userId}`;
+  const [staff, guardians] = await Promise.all([
+    db.user.findMany({
+      where: { role: { in: ["ADMIN", "TEACHER"] }, isActive: true },
+      select: { id: true },
+    }),
+    db.guardianStudent.findMany({
+      where: { studentId: assignment.userId },
+      select: { guardianId: true },
+    }),
+  ]);
+  const recipientIds = Array.from(new Set([
+    ...staff.map((user) => user.id),
+    ...guardians.map((link) => link.guardianId),
+  ])).filter((userId) => userId !== assignment.userId);
+
+  if (recipientIds.length > 0) {
+    await db.notification.createMany({
+      data: recipientIds.map((userId) => ({
+        userId,
+        type: "HOMEWORK_DUE_TODAY",
+        titleTh: "มีการส่งการบ้านท่องศัพท์",
+        bodyTh: `${studentName} ส่งคำว่า "${assignment.vocabulary.word}" แล้ว กดเพื่อฟังเสียงและดูประวัติ`,
+        data: {
+          href: reviewHref,
+          assignmentId: updated.id,
+          studentId: assignment.userId,
+          homeworkType: "DAILY_VOCABULARY",
+        },
+      })),
+    });
+  }
 
   return NextResponse.json({ ok: true, assignment: updated });
 }

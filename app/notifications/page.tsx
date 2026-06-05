@@ -1,7 +1,6 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import NotificationsClient from "@/components/layout/NotificationsClient";
 
 export default async function NotificationsPage() {

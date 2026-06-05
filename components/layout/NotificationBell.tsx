@@ -8,6 +8,7 @@ interface Notification {
   titleTh: string;
   bodyTh: string;
   type: string;
+  data?: { href?: string } | null;
   isRead: boolean;
   createdAt: string;
 }
@@ -84,19 +85,41 @@ export default function NotificationBell() {
             {notifications.length === 0 ? (
               <p className="text-center text-gray-400 text-sm py-8">ไม่มีการแจ้งเตือน</p>
             ) : (
-              notifications.map((n) => (
-                <div
-                  key={n.id}
-                  onClick={() => { if (!n.isRead) markRead(n.id); }}
-                  className={`px-4 py-3 border-b last:border-0 cursor-pointer hover:bg-gray-50 ${!n.isRead ? "bg-blue-50" : ""}`}
-                >
+              notifications.map((n) => {
+                const href = n.data?.href;
+                const content = (
+                  <>
                   <p className="text-sm font-medium text-gray-800">{n.titleTh}</p>
                   <p className="text-xs text-gray-500 mt-0.5">{n.bodyTh}</p>
                   <p className="text-xs text-gray-400 mt-1">
                     {new Date(n.createdAt).toLocaleDateString("th-TH", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
                   </p>
-                </div>
-              ))
+                  </>
+                );
+                const className = `block px-4 py-3 border-b last:border-0 cursor-pointer hover:bg-gray-50 ${!n.isRead ? "bg-blue-50" : ""}`;
+
+                return href ? (
+                  <Link
+                    key={n.id}
+                    href={href}
+                    onClick={() => {
+                      if (!n.isRead) markRead(n.id);
+                      setOpen(false);
+                    }}
+                    className={className}
+                  >
+                    {content}
+                  </Link>
+                ) : (
+                  <div
+                    key={n.id}
+                    onClick={() => { if (!n.isRead) markRead(n.id); }}
+                    className={className}
+                  >
+                    {content}
+                  </div>
+                );
+              })
             )}
           </div>
 
