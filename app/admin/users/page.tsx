@@ -67,9 +67,9 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
           name="q"
           defaultValue={q}
           placeholder="ค้นหา email, username หรือชื่อ..."
-          className="flex-1 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400"
+          className="h-12 min-w-0 flex-1 rounded-lg border-2 border-gray-300 bg-white px-4 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:outline-none focus:border-blue-500"
         />
-        <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm">ค้นหา</button>
+        <button type="submit" className="h-12 rounded-lg bg-blue-600 px-5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700">ค้นหา</button>
       </form>
 
       <UserManager

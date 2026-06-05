@@ -9,6 +9,7 @@ import ThemeToggle from "@/components/layout/ThemeToggle";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "หน้าหลัก", icon: "🏠" },
+  { href: "/alphabet", label: "ท่อง A-Z", icon: "🔤" },
   { href: "/learn", label: "บทเรียน", icon: "📚" },
   { href: "/vocabulary", label: "คำศัพท์", icon: "📝" },
   // { href: "/conversation", label: "AI Tutor", icon: "🤖" }, // coming soon

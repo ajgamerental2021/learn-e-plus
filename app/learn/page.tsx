@@ -37,6 +37,18 @@ export default async function LearnPage() {
           เริ่มจากคอร์สแรกในระดับของคุณ เรียนทีละบทตามลำดับ แล้วเมื่อกด “เรียนจบบทนี้แล้ว”
           ระบบจะสร้างการบ้านของบทนั้นให้ในเมนูการบ้าน
         </div>
+        {profile?.currentLevel?.code === "PRE_A1" && (
+          <Link
+            href="/alphabet"
+            className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-blue-200 bg-blue-50 p-4 hover:bg-blue-100/70"
+          >
+            <div>
+              <p className="font-semibold text-blue-900">เริ่มจากท่อง A-Z</p>
+              <p className="mt-1 text-sm text-blue-700">ดู Chart A-Z ทั้งหมด แล้วกดแต่ละตัวเพื่อฝึกคำศัพท์และประโยคตัวอย่าง</p>
+            </div>
+            <span className="text-3xl">🔤</span>
+          </Link>
+        )}
       </div>
 
       {courses.length === 0 ? (
