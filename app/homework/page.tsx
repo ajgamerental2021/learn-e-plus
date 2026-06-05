@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { bangkokDateOnly } from "@/lib/daily-vocabulary";
 
 const STATUS_LABEL: Record<string, string> = {
   NOT_STARTED: "ยังไม่เริ่ม",
@@ -51,6 +52,10 @@ export default async function HomeworkPage({ searchParams }: { searchParams: Pro
       },
     },
   });
+  const dailyVocabulary = await db.dailyVocabularyAssignment.findUnique({
+    where: { userId_assignedDate: { userId: session.user.id, assignedDate: bangkokDateOnly() } },
+    include: { vocabulary: { select: { word: true, translationTh: true } } },
+  }).catch(() => null);
 
   const tabs = [
     { key: "", label: "ทั้งหมด" },
@@ -80,6 +85,25 @@ export default async function HomeworkPage({ searchParams }: { searchParams: Pro
           ไปเริ่มบทเรียน
         </Link>
       </div>
+
+      <Link href="/homework/vocabulary" className="block rounded-xl border border-emerald-200 bg-emerald-50 p-4 hover:bg-emerald-100/70 transition-colors">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-sm font-semibold text-emerald-900">การบ้านท่องศัพท์รายวัน</p>
+            <p className="mt-1 text-sm text-emerald-700">
+              วันละ 1 คำ ไม่ซ้ำ มีคำอ่าน คำแปล ตัวอย่างประโยค และบันทึกเสียงส่งได้
+            </p>
+            {dailyVocabulary?.vocabulary && (
+              <p className="mt-2 text-xs text-emerald-700">
+                วันนี้: {dailyVocabulary.vocabulary.word} — {dailyVocabulary.vocabulary.translationTh}
+              </p>
+            )}
+          </div>
+          <span className="shrink-0 rounded-full bg-white px-3 py-1 text-xs font-medium text-emerald-700">
+            {dailyVocabulary?.status === "COMPLETED" ? "ส่งแล้ว" : "ทำวันนี้"}
+          </span>
+        </div>
+      </Link>
 
       <div className="flex gap-2 overflow-x-auto pb-1">
         {tabs.map((t) => (
