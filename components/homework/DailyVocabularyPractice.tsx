@@ -41,6 +41,7 @@ export default function DailyVocabularyPractice({
   const [recording, setRecording] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [audioError, setAudioError] = useState("");
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
 
@@ -59,19 +60,21 @@ export default function DailyVocabularyPractice({
 
   async function startRecording() {
     setError("");
+    setAudioError("");
     if (!navigator.mediaDevices?.getUserMedia) {
       setError("อุปกรณ์นี้ยังไม่รองรับการบันทึกเสียงในเบราว์เซอร์");
       return;
     }
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const recorder = new MediaRecorder(stream);
+    const mimeType = preferredAudioMimeType();
+    const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
     chunksRef.current = [];
     recorderRef.current = recorder;
     recorder.ondataavailable = (event) => {
       if (event.data.size > 0) chunksRef.current.push(event.data);
     };
     recorder.onstop = () => {
-      const blob = new Blob(chunksRef.current, { type: recorder.mimeType || "audio/webm" });
+      const blob = new Blob(chunksRef.current, { type: recorder.mimeType || mimeType || "audio/mp4" });
       const reader = new FileReader();
       reader.onloadend = () => setAudioDataUrl(String(reader.result));
       reader.readAsDataURL(blob);
@@ -94,6 +97,10 @@ export default function DailyVocabularyPractice({
     }
     if (!audioDataUrl) {
       setError("กรุณาบันทึกเสียงพูดคำศัพท์และสะกดคำก่อนส่ง");
+      return;
+    }
+    if (audioError) {
+      setError("กรุณาบันทึกเสียงใหม่ เพราะไฟล์เสียงเดิมเปิดไม่ได้");
       return;
     }
     setSubmitting(true);
@@ -153,7 +160,7 @@ export default function DailyVocabularyPractice({
           </div>
         )}
 
-        <Button type="button" variant="outline" className="mt-4" onClick={speakWord}>
+        <Button type="button" className="mt-4 bg-blue-600 text-white hover:bg-blue-700" onClick={speakWord}>
           <Volume2 className="size-4" />
           ฟังเสียงคำศัพท์
         </Button>
@@ -166,11 +173,24 @@ export default function DailyVocabularyPractice({
         <div className="mt-4 grid gap-4">
           <div className="space-y-2">
             <label htmlFor="spokenText" className="text-sm font-medium text-gray-700">คำที่พูด</label>
-            <Input id="spokenText" value={spokenText} onChange={(e) => setSpokenText(e.target.value)} disabled={completedToday} />
+            <Input
+              id="spokenText"
+              value={spokenText}
+              onChange={(e) => setSpokenText(e.target.value)}
+              disabled={submitting}
+              className="h-12 border-2 border-gray-300 bg-white px-4 text-base text-gray-900 shadow-sm placeholder:text-gray-400 focus-visible:border-blue-500"
+            />
           </div>
           <div className="space-y-2">
             <label htmlFor="spellingText" className="text-sm font-medium text-gray-700">พิมพ์สะกดคำ</label>
-            <Input id="spellingText" value={spellingText} onChange={(e) => setSpellingText(e.target.value)} placeholder={today.vocabulary.word} disabled={completedToday} />
+            <Input
+              id="spellingText"
+              value={spellingText}
+              onChange={(e) => setSpellingText(e.target.value)}
+              placeholder={today.vocabulary.word}
+              disabled={submitting}
+              className="h-12 border-2 border-gray-300 bg-white px-4 text-base text-gray-900 shadow-sm placeholder:text-gray-400 focus-visible:border-blue-500"
+            />
             {spellingText && (
               <p className={`text-xs ${typedSpelling === expectedSpelling ? "text-green-600" : "text-amber-600"}`}>
                 {typedSpelling === expectedSpelling ? "สะกดตรงกับคำศัพท์" : "ยังสะกดไม่ตรง ลองตรวจอีกครั้ง"}
@@ -178,26 +198,39 @@ export default function DailyVocabularyPractice({
             )}
           </div>
 
-          <div className="rounded-lg border bg-gray-50 p-4">
-            <div className="flex flex-wrap gap-3">
+          <div className="rounded-lg border-2 border-blue-100 bg-blue-50 p-4">
+            <p className="mb-3 text-sm font-semibold text-blue-900">บันทึกเสียงพูดคำศัพท์และสะกดคำ</p>
+            <div className="flex flex-wrap items-center gap-3">
               {!recording ? (
-                <Button type="button" onClick={startRecording} disabled={completedToday}>
+                <Button type="button" onClick={startRecording} disabled={submitting} className="h-11 bg-red-600 px-4 text-white hover:bg-red-700 disabled:bg-gray-300">
                   <Mic className="size-4" />
                   เริ่มบันทึกเสียง
                 </Button>
               ) : (
-                <Button type="button" variant="outline" onClick={stopRecording}>
+                <Button type="button" onClick={stopRecording} className="h-11 bg-gray-900 px-4 text-white hover:bg-gray-800">
                   <Square className="size-4" />
                   หยุดบันทึก
                 </Button>
               )}
-              {audioDataUrl && <audio controls src={audioDataUrl} className="min-w-64 flex-1" />}
+              {audioDataUrl && !audioError && (
+                <audio
+                  controls
+                  src={audioDataUrl}
+                  onError={() => setAudioError("ไฟล์เสียงนี้เปิดไม่ได้บนเบราว์เซอร์นี้ กรุณาบันทึกใหม่อีกครั้ง")}
+                  className="min-w-64 flex-1 rounded-md bg-white"
+                />
+              )}
             </div>
+            {audioError && (
+              <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                {audioError}
+              </div>
+            )}
           </div>
 
           {error && <p className="text-sm text-red-500">{error}</p>}
-          <Button type="button" onClick={submit} disabled={completedToday || submitting} className="w-full">
-            {completedToday ? "ส่งแล้ววันนี้" : submitting ? "กำลังส่ง..." : "ส่งการบ้าน"}
+          <Button type="button" onClick={submit} disabled={submitting || recording} className="h-12 w-full bg-blue-600 text-base text-white hover:bg-blue-700 disabled:bg-gray-300">
+            {submitting ? "กำลังส่ง..." : completedToday ? "บันทึกแก้ไขการบ้าน" : "ส่งการบ้าน"}
           </Button>
         </div>
       </section>
@@ -230,6 +263,17 @@ export default function DailyVocabularyPractice({
       </section>
     </div>
   );
+}
+
+function preferredAudioMimeType() {
+  if (typeof MediaRecorder === "undefined" || !MediaRecorder.isTypeSupported) return "";
+  const options = [
+    "audio/mp4",
+    "audio/aac",
+    "audio/webm;codecs=opus",
+    "audio/webm",
+  ];
+  return options.find((type) => MediaRecorder.isTypeSupported(type)) ?? "";
 }
 
 function InfoBox({ label, value }: { label: string; value: string }) {
