@@ -37,7 +37,7 @@ export default async function AlphabetLetterPage({ params }: { params: Promise<{
             <p className="text-sm text-gray-500">เสียงเริ่มต้นโดยประมาณ: {item.soundHint}</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <SpeakButton text={item.speechText} label={`ฟัง ${item.letter}`} />
+            <SpeakButton text={item.pronunciationTh} label={`ฟัง ${item.letter}`} lang="th-TH" />
             <SpeakButton text={item.words.map((word) => word.word).join(". ")} label="ฟังคำศัพท์" />
           </div>
         </div>

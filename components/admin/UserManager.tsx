@@ -188,7 +188,7 @@ export default function UserManager({
   }
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[400px_1fr]">
+    <div className="space-y-5">
       <section className="rounded-lg border bg-white p-4 shadow-sm">
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
@@ -216,27 +216,35 @@ export default function UserManager({
         {error && <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-3 text-xs text-red-700">{error}</div>}
 
         <form onSubmit={submit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="displayName">ชื่อที่แสดง</Label>
-            <Input id="displayName" value={form.displayName} onChange={(e) => update("displayName", e.target.value)} required disabled={!canManage || saving} className={inputClass} />
-          </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1">
-            <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
-              <Input id="username" value={form.username} onChange={(e) => update("username", e.target.value.toLowerCase())} required disabled={!canManage || saving} className={inputClass} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">อีเมล</Label>
-              <Input id="email" type="email" value={form.email} onChange={(e) => update("email", e.target.value)} required disabled={!canManage || saving} className={inputClass} />
-            </div>
+          <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
+            {editing
+              ? "แก้ข้อมูลด้านล่าง แล้วกด “บันทึกการแก้ไข”"
+              : "กรอกชื่อ, Username, อีเมล และรหัสผ่าน จากนั้นเลือกประเภทบัญชี"}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">{editing ? "รหัสผ่านใหม่ (ถ้าต้องการเปลี่ยน)" : "รหัสผ่าน"}</Label>
-            <Input id="password" type="password" value={form.password} onChange={(e) => update("password", e.target.value)} minLength={editing ? undefined : 8} required={!editing} disabled={!canManage || saving} className={inputClass} />
+            <Label htmlFor="displayName" className="text-gray-900">ชื่อที่แสดง <span className="text-red-500">*</span></Label>
+            <Input id="displayName" placeholder="เช่น สมชาย ใจดี หรือ คุณแม่สมชาย" value={form.displayName} onChange={(e) => update("displayName", e.target.value)} required disabled={!canManage || saving} className={inputClass} />
+            <p className="text-xs text-gray-500">ชื่อที่ทุกคนจะเห็นภายในแอป</p>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="role">ประเภท Member</Label>
+              <Label htmlFor="username" className="text-gray-900">Username สำหรับ Login <span className="text-red-500">*</span></Label>
+              <Input id="username" placeholder="เช่น golden014" value={form.username} onChange={(e) => update("username", e.target.value.toLowerCase())} required disabled={!canManage || saving} className={inputClass} />
+              <p className="text-xs text-gray-500">ใช้ a-z, ตัวเลข และ _ เท่านั้น</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-gray-900">อีเมลสำหรับ Login <span className="text-red-500">*</span></Label>
+              <Input id="email" type="email" placeholder="เช่น parent@example.com" value={form.email} onChange={(e) => update("email", e.target.value)} required disabled={!canManage || saving} className={inputClass} />
+              <p className="text-xs text-gray-500">ต้องไม่ซ้ำกับบัญชีอื่น</p>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="password" className="text-gray-900">{editing ? "รหัสผ่านใหม่ (ไม่เปลี่ยนให้เว้นว่าง)" : <>รหัสผ่าน <span className="text-red-500">*</span></>}</Label>
+            <Input id="password" type="password" placeholder={editing ? "เว้นว่างไว้หากไม่ต้องการเปลี่ยน" : "อย่างน้อย 8 ตัวอักษร"} value={form.password} onChange={(e) => update("password", e.target.value)} minLength={editing ? undefined : 8} required={!editing} disabled={!canManage || saving} className={inputClass} />
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="role" className="text-gray-900">ประเภทบัญชี <span className="text-red-500">*</span></Label>
               <select
                 id="role"
                 value={form.role}
@@ -248,9 +256,10 @@ export default function UserManager({
                   <option key={role} value={role}>{USER_ROLE_LABEL[role]}</option>
                 ))}
               </select>
+              <p className="text-xs text-gray-500">เลือกผู้ปกครองเพื่อผูกกับบัญชีนักเรียน</p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="status">สถานะ</Label>
+              <Label htmlFor="status" className="text-gray-900">สถานะการเข้าใช้งาน</Label>
               <select
                 id="status"
                 value={form.isActive ? "active" : "inactive"}
@@ -266,23 +275,29 @@ export default function UserManager({
 
           {form.role === "PARENT" && (
             <div className="space-y-2">
-              <Label htmlFor="students">ผูกนักเรียนกับผู้ปกครอง</Label>
-              <select
-                id="students"
-                multiple
-                value={form.studentIds}
-                onChange={(e) => update("studentIds", Array.from(e.currentTarget.selectedOptions).map((option) => option.value))}
-                disabled={!canManage || saving}
-                className="min-h-32 w-full rounded-lg border-2 border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm outline-none focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-400"
-              >
-                {learnerOptions.map((learner) => (
-                  <option key={learner.id} value={learner.id}>
-                    {learner.profile?.displayName ?? learner.email} ({learner.username ?? learner.email})
-                  </option>
-                ))}
-              </select>
+              <Label className="text-gray-900">เลือกนักเรียนที่อยู่ในการดูแล</Label>
+              <div className="grid max-h-56 gap-2 overflow-y-auto rounded-lg border-2 border-gray-300 bg-white p-3 sm:grid-cols-2">
+                {learnerOptions.map((learner) => {
+                  const checked = form.studentIds.includes(learner.id);
+                  return (
+                    <label key={learner.id} className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 ${checked ? "border-blue-400 bg-blue-50" : "border-gray-200"}`}>
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => update("studentIds", checked ? form.studentIds.filter((id) => id !== learner.id) : [...form.studentIds, learner.id])}
+                        disabled={!canManage || saving}
+                        className="mt-0.5 size-5"
+                      />
+                      <span>
+                        <span className="block text-sm font-semibold text-gray-900">{learner.profile?.displayName ?? learner.email}</span>
+                        <span className="block text-xs text-gray-500">{learner.username ?? learner.email}</span>
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
               <p className="text-xs text-gray-400">
-                {selectedStudentNames.length > 0 ? `เลือกแล้ว: ${selectedStudentNames.join(", ")}` : "กด Cmd/Ctrl เพื่อเลือกได้หลายคน"}
+                {selectedStudentNames.length > 0 ? `เลือกแล้ว: ${selectedStudentNames.join(", ")}` : "ยังไม่ได้เลือกนักเรียน"}
               </p>
             </div>
           )}
@@ -296,7 +311,7 @@ export default function UserManager({
 
       <section className="rounded-lg border bg-white p-4 shadow-sm">
         <div className="mb-4">
-          <Label htmlFor="userManagerSearch">ค้นหาในรายการหน้านี้</Label>
+          <Label htmlFor="userManagerSearch" className="text-gray-900">ค้นหาผู้ใช้ในรายการ</Label>
           <Input
             id="userManagerSearch"
             value={userQuery}
@@ -304,113 +319,61 @@ export default function UserManager({
             placeholder="เช่น golden014"
             className={`${inputClass} mt-2`}
           />
-          <p className="mt-2 text-xs text-gray-500">แตะ card หรือปุ่มแก้ไขเพื่อโหลดข้อมูลเข้าแบบฟอร์มด้านบน/ด้านซ้าย</p>
+          <p className="mt-2 text-xs text-gray-500">กด “แก้ไขข้อมูล” เพื่อโหลดข้อมูลของผู้ใช้นั้นเข้าสู่แบบฟอร์มด้านบน</p>
         </div>
 
-        <div className="grid gap-3 md:hidden">
+        <div className="grid gap-3 xl:grid-cols-2">
           {visibleUsers.map((user) => {
             const studentNames = user.guardianStudents
               .map((item) => learnerOptions.find((learner) => learner.id === item.studentId)?.profile?.displayName)
               .filter(Boolean);
             return (
-              <div key={user.id} className={`rounded-lg border p-4 ${form.id === user.id ? "border-blue-400 bg-blue-50" : "bg-white"}`}>
-                <button type="button" onClick={() => startEdit(user)} className="w-full text-left">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="font-semibold text-gray-900">{user.profile?.displayName ?? "ไม่มีชื่อ"}</p>
-                      <p className="mt-1 text-xs text-gray-500">{user.username ? `${user.username} · ` : ""}{user.email}</p>
-                    </div>
-                    <span className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-700">{USER_ROLE_LABEL[user.role]}</span>
+              <article key={user.id} className={`rounded-lg border-2 p-4 ${form.id === user.id ? "border-blue-400 bg-blue-50" : "border-gray-200 bg-white"}`}>
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-semibold text-gray-900">{user.profile?.displayName ?? "ไม่มีชื่อ"}</p>
+                    <p className="mt-1 break-all text-xs text-gray-500">Username: {user.username ?? "-"}</p>
+                    <p className="break-all text-xs text-gray-500">อีเมล: {user.email}</p>
                   </div>
-                  {user.role === "PARENT" && (
-                    <p className="mt-2 text-xs text-gray-500">
-                      ผู้ปกครองของ: {studentNames.length > 0 ? studentNames.join(", ") : "ยังไม่ได้ผูกนักเรียน"}
-                    </p>
-                  )}
-                  <p className={`mt-2 text-xs font-medium ${user.isActive ? "text-green-700" : "text-red-600"}`}>
-                    {user.isActive ? "ใช้งานอยู่" : "ปิดใช้งาน"}
+                  <div className="flex flex-wrap gap-2">
+                    <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">{USER_ROLE_LABEL[user.role]}</span>
+                    <span className={`rounded-full px-2 py-1 text-xs font-medium ${user.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                      {user.isActive ? "ใช้งานอยู่" : "ปิดใช้งาน"}
+                    </span>
+                  </div>
+                </div>
+                <div className="mt-3 grid grid-cols-2 gap-2 text-center">
+                  <div className="rounded-lg bg-gray-50 p-2">
+                    <p className="font-bold text-gray-900">{user._count.lessonProgress}</p>
+                    <p className="text-xs text-gray-500">บทเรียน</p>
+                  </div>
+                  <div className="rounded-lg bg-gray-50 p-2">
+                    <p className="font-bold text-gray-900">{user._count.homeworkAssignments}</p>
+                    <p className="text-xs text-gray-500">การบ้าน</p>
+                  </div>
+                </div>
+                {user.role === "PARENT" && (
+                  <p className="mt-3 rounded-lg bg-amber-50 p-2 text-xs text-amber-800">
+                    ดูแลนักเรียน: {studentNames.length > 0 ? studentNames.join(", ") : "ยังไม่ได้ผูกนักเรียน"}
                   </p>
-                </button>
-                <div className="mt-3 grid grid-cols-2 gap-2">
+                )}
+                <div className="mt-3 grid gap-2 sm:grid-cols-3">
                   <Button type="button" variant="outline" onClick={() => startEdit(user)} disabled={!canManage} className="h-10 border-gray-300 bg-white text-gray-900">
                     <Edit3 className="size-4" />
-                    แก้ไข
+                    แก้ไขข้อมูล
                   </Button>
                   <Button type="button" onClick={() => quickRole(user, "PARENT")} disabled={!canManage || saving || user.role === "PARENT"} className="h-10 bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-300">
                     เป็นผู้ปกครอง
-                  </Button>
-                  <Button type="button" variant="outline" onClick={() => quickRole(user, "LEARNER")} disabled={!canManage || saving || user.role === "LEARNER"} className="h-10 border-gray-300 bg-white text-gray-900">
-                    เป็นนักเรียน
                   </Button>
                   <Button type="button" variant="outline" onClick={() => deactivate(user)} disabled={!canManage || !user.isActive} className="h-10 border-red-200 bg-white text-red-600">
                     <Trash2 className="size-4" />
                     ปิดใช้งาน
                   </Button>
                 </div>
-              </div>
+              </article>
             );
           })}
           {visibleUsers.length === 0 && <p className="rounded-lg border p-6 text-center text-sm text-gray-400">ไม่พบผู้ใช้</p>}
-        </div>
-
-        <div className="hidden overflow-x-auto md:block">
-          <table className="w-full min-w-[820px] text-sm">
-            <thead className="border-b bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left font-medium text-gray-600">User</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600">ประเภท</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600">ผู้ปกครองของ</th>
-                <th className="px-4 py-3 text-center font-medium text-gray-600">บทเรียน</th>
-                <th className="px-4 py-3 text-center font-medium text-gray-600">การบ้าน</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600">สถานะ</th>
-                <th className="px-4 py-3 text-right font-medium text-gray-600">จัดการ</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {visibleUsers.map((user) => {
-                const studentNames = user.guardianStudents
-                  .map((item) => learnerOptions.find((learner) => learner.id === item.studentId)?.profile?.displayName)
-                  .filter(Boolean);
-                return (
-                  <tr key={user.id} className={`hover:bg-gray-50 ${form.id === user.id ? "bg-blue-50" : ""}`}>
-                    <td className="px-4 py-3">
-                      <p className="font-medium text-gray-800">{user.profile?.displayName ?? "ไม่มีชื่อ"}</p>
-                      <p className="text-xs text-gray-400">{user.username ? `${user.username} · ` : ""}{user.email}</p>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-700">{USER_ROLE_LABEL[user.role]}</span>
-                    </td>
-                    <td className="max-w-56 px-4 py-3 text-xs text-gray-500">
-                      {user.role === "PARENT" ? (studentNames.length > 0 ? studentNames.join(", ") : "ยังไม่ได้ผูกนักเรียน") : "-"}
-                    </td>
-                    <td className="px-4 py-3 text-center text-gray-700">{user._count.lessonProgress}</td>
-                    <td className="px-4 py-3 text-center text-gray-700">{user._count.homeworkAssignments}</td>
-                    <td className="px-4 py-3">
-                      <span className={`rounded-full px-2 py-1 text-xs ${user.isActive ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}>
-                        {user.isActive ? "ใช้งานอยู่" : "ปิดใช้งาน"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex justify-end gap-2">
-                        <Button type="button" variant="outline" size="sm" onClick={() => startEdit(user)} disabled={!canManage} title="แก้ไข">
-                          <Edit3 className="size-4" />
-                          แก้ไข
-                        </Button>
-                        <Button type="button" size="sm" onClick={() => quickRole(user, "PARENT")} disabled={!canManage || saving || user.role === "PARENT"} className="bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-300">
-                          เป็นผู้ปกครอง
-                        </Button>
-                        <Button type="button" variant="outline" size="sm" onClick={() => deactivate(user)} disabled={!canManage || !user.isActive} title="ปิดใช้งาน">
-                          <Trash2 className="size-4" />
-                          ปิด
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          {visibleUsers.length === 0 && <p className="p-6 text-center text-sm text-gray-400">ไม่พบผู้ใช้</p>}
         </div>
       </section>
     </div>

@@ -3,11 +3,19 @@
 import { Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export default function SpeakButton({ text, label = "ฟังเสียง" }: { text: string; label?: string }) {
+export default function SpeakButton({
+  text,
+  label = "ฟังเสียง",
+  lang = "en-US",
+}: {
+  text: string;
+  label?: string;
+  lang?: string;
+}) {
   function speak() {
     if (typeof window === "undefined" || !window.speechSynthesis) return;
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "en-US";
+    utterance.lang = lang;
     utterance.rate = 0.75;
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utterance);
