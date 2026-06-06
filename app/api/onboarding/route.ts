@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { auth } from "@/lib/auth";
+import { auth, unstable_update } from "@/lib/auth";
 import { db } from "@/lib/db";
 
 const schema = z.object({
@@ -38,6 +38,12 @@ export async function POST(req: NextRequest) {
         dailyGoalMinutes,
         examTarget: examTarget ?? null,
         currentLevelId: startFromPlacement ? null : (startingLevel?.id ?? null),
+        onboardingDone: true,
+      },
+    });
+
+    await unstable_update({
+      user: {
         onboardingDone: true,
       },
     });

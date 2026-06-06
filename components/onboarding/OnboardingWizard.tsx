@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AGE_GROUPS, DAILY_GOAL_OPTIONS, LEARNING_PATHS } from "@/lib/constants";
@@ -25,10 +24,10 @@ const INITIAL: FormData = {
 };
 
 export default function OnboardingWizard({ displayName }: { displayName: string }) {
-  const router = useRouter();
   const [step, setStep] = useState<Step>(1);
   const [form, setForm] = useState<FormData>(INITIAL);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   function update(field: keyof FormData, value: string | number | boolean) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -36,16 +35,24 @@ export default function OnboardingWizard({ displayName }: { displayName: string 
 
   async function finish(startFromPlacement: boolean) {
     setLoading(true);
-    const res = await fetch("/api/onboarding", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, startFromPlacement }),
-    });
-    const data = await res.json();
-    setLoading(false);
-    if (res.ok) {
-      router.push(data.redirectTo);
-      router.refresh();
+    setError("");
+    try {
+      const res = await fetch("/api/onboarding", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, startFromPlacement }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error ?? "บันทึกข้อมูลไม่สำเร็จ กรุณาลองใหม่");
+        return;
+      }
+
+      window.location.replace(data.redirectTo);
+    } catch {
+      setError("เชื่อมต่อระบบไม่สำเร็จ กรุณาตรวจอินเทอร์เน็ตแล้วลองใหม่");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -141,6 +148,11 @@ export default function OnboardingWizard({ displayName }: { displayName: string 
               <CardDescription>เลือกวิธีเริ่มต้นการเรียนของคุณ</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {error && (
+                <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                  {error}
+                </div>
+              )}
               <button
                 onClick={() => !loading && finish(true)}
                 disabled={loading}

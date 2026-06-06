@@ -23,12 +23,17 @@ export const authConfig: NextAuthConfig = {
     },
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         const appUser = user as typeof user & AppSessionFields;
         token.id = user.id;
         token.role = appUser.role ?? "LEARNER";
         token.onboardingDone = appUser.onboardingDone ?? false;
+      }
+      if (trigger === "update" && session?.user) {
+        const updatedUser = session.user as typeof session.user & AppSessionFields;
+        if (typeof updatedUser.role === "string") token.role = updatedUser.role;
+        if (typeof updatedUser.onboardingDone === "boolean") token.onboardingDone = updatedUser.onboardingDone;
       }
       return token;
     },
