@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Mic, Square, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { playTextToSpeech, spellingTextForSpeech } from "@/lib/client-tts";
+import { playSpellingTextToSpeech, playTextToSpeech } from "@/lib/client-tts";
 
 type DailyAssignment = {
   id: string;
@@ -57,8 +57,7 @@ export default function DailyVocabularyPractice({
 
   function speakSpelling() {
     if (!today) return;
-    const spellingText = spellingTextForSpeech(today.vocabulary.word);
-    void playTextToSpeech(spellingText, { lang: "en-US", rate: 0.65, preferAudio: true });
+    void playSpellingTextToSpeech(today.vocabulary.word);
   }
 
   async function startRecording() {

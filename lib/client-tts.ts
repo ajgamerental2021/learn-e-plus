@@ -7,11 +7,13 @@ type TtsOptions = {
 };
 
 let currentAudio: HTMLAudioElement | null = null;
+let sequenceToken = 0;
 
 export async function playTextToSpeech(text: string, options: TtsOptions = {}) {
   const cleanText = text.trim();
   if (!cleanText || typeof window === "undefined") return;
 
+  sequenceToken += 1;
   const lang = options.lang ?? "en-US";
   const preferAudio = options.preferAudio ?? isAndroidWebView();
 
@@ -26,12 +28,34 @@ export async function playTextToSpeech(text: string, options: TtsOptions = {}) {
   await playRemoteAudio(cleanText, lang);
 }
 
-export function spellingTextForSpeech(text: string) {
+export async function playSpellingTextToSpeech(text: string) {
+  const groups = spellingGroups(text);
+  if (groups.length === 0 || typeof window === "undefined") return;
+
+  const token = sequenceToken + 1;
+  sequenceToken = token;
+  currentAudio?.pause();
+
+  for (let wordIndex = 0; wordIndex < groups.length; wordIndex += 1) {
+    const letters = groups[wordIndex];
+    for (let letterIndex = 0; letterIndex < letters.length; letterIndex += 1) {
+      if (sequenceToken !== token) return;
+      await playRemoteAudio(letters[letterIndex], "en-US", true);
+      if (sequenceToken !== token) return;
+      await delay(520);
+    }
+    if (wordIndex < groups.length - 1) {
+      await delay(1100);
+    }
+  }
+}
+
+function spellingGroups(text: string) {
   return text
     .toUpperCase()
-    .replace(/[^A-Z0-9]/g, "")
-    .split("")
-    .join(". ");
+    .split(/\s+/)
+    .map((word) => word.replace(/[^A-Z0-9]/g, "").split("").filter(Boolean))
+    .filter((letters) => letters.length > 0);
 }
 
 function speakWithBrowser(text: string, lang: string, rate: number) {
@@ -44,17 +68,29 @@ function speakWithBrowser(text: string, lang: string, rate: number) {
   return true;
 }
 
-async function playRemoteAudio(text: string, lang: string) {
+async function playRemoteAudio(text: string, lang: string, waitForEnd = false) {
   try {
     currentAudio?.pause();
     const audio = new Audio(ttsUrl(text, lang));
     currentAudio = audio;
     audio.preload = "auto";
     await audio.play();
+    if (waitForEnd) await waitForAudioEnd(audio);
     return true;
   } catch {
     return false;
   }
+}
+
+function waitForAudioEnd(audio: HTMLAudioElement) {
+  return new Promise<void>((resolve) => {
+    audio.addEventListener("ended", () => resolve(), { once: true });
+    audio.addEventListener("error", () => resolve(), { once: true });
+  });
+}
+
+function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function ttsUrl(text: string, lang: string) {
