@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Mic, Square, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { playTextToSpeech } from "@/lib/client-tts";
 
 type DailyAssignment = {
   id: string;
@@ -50,12 +51,8 @@ export default function DailyVocabularyPractice({
   const typedSpelling = spellingText.replace(/\s+/g, "").toLowerCase();
 
   function speakWord() {
-    if (!today || typeof window === "undefined" || !window.speechSynthesis) return;
-    const utterance = new SpeechSynthesisUtterance(today.vocabulary.word);
-    utterance.lang = "en-US";
-    utterance.rate = 0.75;
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
+    if (!today) return;
+    void playTextToSpeech(today.vocabulary.word, { lang: "en-US" });
   }
 
   async function startRecording() {

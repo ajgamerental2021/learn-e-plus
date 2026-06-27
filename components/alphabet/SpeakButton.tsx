@@ -2,6 +2,7 @@
 
 import { Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { playTextToSpeech } from "@/lib/client-tts";
 
 export default function SpeakButton({
   text,
@@ -13,12 +14,7 @@ export default function SpeakButton({
   lang?: string;
 }) {
   function speak() {
-    if (typeof window === "undefined" || !window.speechSynthesis) return;
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = lang;
-    utterance.rate = 0.75;
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
+    void playTextToSpeech(text, { lang });
   }
 
   return (
