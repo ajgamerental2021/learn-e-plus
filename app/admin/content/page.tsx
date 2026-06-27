@@ -1,6 +1,9 @@
 import { db } from "@/lib/db";
+import { connection } from "next/server";
 
 export default async function AdminContentPage() {
+  await connection();
+
   const [courses, lessons, vocab, levels] = await Promise.all([
     db.course.findMany({
       include: {

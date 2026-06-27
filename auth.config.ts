@@ -5,6 +5,7 @@ type AppSessionFields = { role?: string; onboardingDone?: boolean };
 
 export const authConfig: NextAuthConfig = {
   session: { strategy: "jwt" },
+  secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
   trustHost: true,
   pages: {
     signIn: "/auth/login",

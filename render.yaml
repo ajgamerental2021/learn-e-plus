@@ -14,6 +14,8 @@ services:
         value: https://learn-e-plus.onrender.com
       - key: NEXTAUTH_SECRET
         value: 10ZK9cCvJaZfUIH5LW9ktfdfgiKZJxLJhxkJ9aOhHXs=
+      - key: AUTH_SECRET
+        value: 10ZK9cCvJaZfUIH5LW9ktfdfgiKZJxLJhxkJ9aOhHXs=
       - key: RESEND_API_KEY
         value: re_placeholder
       - key: CRON_SECRET

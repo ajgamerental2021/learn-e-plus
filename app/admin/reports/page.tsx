@@ -1,6 +1,9 @@
 import { db } from "@/lib/db";
+import { connection } from "next/server";
 
 export default async function AdminReportsPage() {
+  await connection();
+
   const now = new Date();
   const todayStart = new Date(now);
   todayStart.setHours(0, 0, 0, 0);

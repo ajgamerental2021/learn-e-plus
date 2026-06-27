@@ -1,7 +1,10 @@
 import { db } from "@/lib/db";
 import Link from "next/link";
+import { connection } from "next/server";
 
 export default async function AdminDashboard() {
+  await connection();
+
   const [users, lessons, vocab, homeworkPending, testsToday] = await Promise.all([
     db.user.count(),
     db.lesson.count({ where: { isPublished: true } }),
