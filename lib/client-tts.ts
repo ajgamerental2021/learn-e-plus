@@ -26,6 +26,14 @@ export async function playTextToSpeech(text: string, options: TtsOptions = {}) {
   await playRemoteAudio(cleanText, lang);
 }
 
+export function spellingTextForSpeech(text: string) {
+  return text
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .split("")
+    .join(". ");
+}
+
 function speakWithBrowser(text: string, lang: string, rate: number) {
   if (!window.speechSynthesis || typeof SpeechSynthesisUtterance === "undefined") return false;
   window.speechSynthesis.cancel();
@@ -50,8 +58,8 @@ async function playRemoteAudio(text: string, lang: string) {
 }
 
 function ttsUrl(text: string, lang: string) {
-  const tl = lang.toLowerCase().startsWith("th") ? "th" : "en";
-  return `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${tl}&q=${encodeURIComponent(text)}`;
+  const params = new URLSearchParams({ text, lang });
+  return `/api/tts?${params.toString()}`;
 }
 
 function isAndroidWebView() {

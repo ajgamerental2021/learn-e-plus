@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Mic, Square, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { playTextToSpeech } from "@/lib/client-tts";
+import { playTextToSpeech, spellingTextForSpeech } from "@/lib/client-tts";
 
 type DailyAssignment = {
   id: string;
@@ -52,7 +52,13 @@ export default function DailyVocabularyPractice({
 
   function speakWord() {
     if (!today) return;
-    void playTextToSpeech(today.vocabulary.word, { lang: "en-US" });
+    void playTextToSpeech(today.vocabulary.word, { lang: "en-US", preferAudio: true });
+  }
+
+  function speakSpelling() {
+    if (!today) return;
+    const spellingText = spellingTextForSpeech(today.vocabulary.word);
+    void playTextToSpeech(spellingText, { lang: "en-US", rate: 0.65, preferAudio: true });
   }
 
   async function startRecording() {
@@ -157,10 +163,16 @@ export default function DailyVocabularyPractice({
           </div>
         )}
 
-        <Button type="button" className="mt-4 bg-blue-600 text-white hover:bg-blue-700" onClick={speakWord}>
-          <Volume2 className="size-4" />
-          ฟังเสียงคำศัพท์
-        </Button>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <Button type="button" className="bg-blue-600 text-white hover:bg-blue-700" onClick={speakWord}>
+            <Volume2 className="size-4" />
+            ฟังเสียงคำศัพท์
+          </Button>
+          <Button type="button" className="bg-indigo-600 text-white hover:bg-indigo-700" onClick={speakSpelling}>
+            <Volume2 className="size-4" />
+            ฟังเสียงสะกดคำ
+          </Button>
+        </div>
       </section>
 
       <section className="rounded-xl border bg-white p-5">
