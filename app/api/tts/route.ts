@@ -8,6 +8,7 @@ export async function GET(req: NextRequest) {
   const url = new URL(req.url);
   const text = (url.searchParams.get("text") ?? "").trim().slice(0, MAX_TEXT_LENGTH);
   const lang = normalizeLang(url.searchParams.get("lang") ?? "en-US");
+  const speed = normalizeSpeed(url.searchParams.get("speed"));
 
   if (!text) {
     return Response.json({ error: "Missing text" }, { status: 400 });
@@ -18,6 +19,7 @@ export async function GET(req: NextRequest) {
   ttsUrl.searchParams.set("client", "tw-ob");
   ttsUrl.searchParams.set("tl", lang);
   ttsUrl.searchParams.set("q", text);
+  if (speed) ttsUrl.searchParams.set("ttsspeed", speed);
 
   const upstream = await fetch(ttsUrl, {
     headers: {
@@ -40,4 +42,11 @@ export async function GET(req: NextRequest) {
 
 function normalizeLang(lang: string) {
   return lang.toLowerCase().startsWith("th") ? "th" : "en";
+}
+
+function normalizeSpeed(speed: string | null) {
+  if (!speed) return "";
+  const value = Number(speed);
+  if (!Number.isFinite(value)) return "";
+  return String(Math.min(1, Math.max(0.24, value)));
 }
