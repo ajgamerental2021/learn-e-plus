@@ -10,7 +10,14 @@ interface SkillScore {
 }
 
 interface Props {
-  user: { id: string; displayName: string | null; email: string; createdAt: Date; role: string };
+  user: {
+    id: string;
+    displayName: string | null;
+    email: string;
+    createdAt: Date;
+    role: string;
+    notificationPrefs: { inAppEnabled: boolean; pushEnabled: boolean; emailEnabled: boolean } | null;
+  };
   profile: {
     currentLevel: { code: string; nameTh: string } | null;
     ageGroup: string | null;
@@ -36,6 +43,7 @@ const SKILL_LABELS: Record<string, string> = {
 export default function ProfileClient({ user, profile, streak, skillScores, lessonsCompleted, testsAttempted }: Props) {
   const router = useRouter();
   const [name, setName] = useState(user.displayName ?? "");
+  const [inAppNotificationsEnabled, setInAppNotificationsEnabled] = useState(user.notificationPrefs?.inAppEnabled ?? true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -44,11 +52,24 @@ export default function ProfileClient({ user, profile, streak, skillScores, less
     await fetch("/api/users/me", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ displayName: name }),
+      body: JSON.stringify({ displayName: name, inAppNotificationsEnabled }),
     });
     setSaved(true);
     setSaving(false);
     setTimeout(() => setSaved(false), 2000);
+    router.refresh();
+  }
+
+  async function handleToggleNotifications() {
+    const nextValue = !inAppNotificationsEnabled;
+    setInAppNotificationsEnabled(nextValue);
+    setSaving(true);
+    await fetch("/api/users/me", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ inAppNotificationsEnabled: nextValue }),
+    });
+    setSaving(false);
     router.refresh();
   }
 
@@ -126,6 +147,30 @@ export default function ProfileClient({ user, profile, streak, skillScores, less
         >
           {saved ? "✓ บันทึกแล้ว" : saving ? "กำลังบันทึก..." : "บันทึก"}
         </button>
+      </div>
+
+      <div className="bg-white rounded-xl border p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2 className="font-semibold text-gray-700">การแจ้งเตือน</h2>
+            <p className="mt-1 text-sm text-gray-500">รับแจ้งเตือนในแอพเมื่อมีการบ้าน ส่งงาน หรือกิจกรรมสำคัญ</p>
+          </div>
+          <button
+            type="button"
+            onClick={handleToggleNotifications}
+            disabled={saving}
+            className={`relative h-8 w-14 rounded-full transition-colors ${inAppNotificationsEnabled ? "bg-blue-600" : "bg-gray-300"}`}
+            aria-pressed={inAppNotificationsEnabled}
+            aria-label="เปิดปิดการแจ้งเตือนในแอพ"
+          >
+            <span
+              className={`absolute top-1 size-6 rounded-full bg-white shadow transition-transform ${inAppNotificationsEnabled ? "translate-x-7" : "translate-x-1"}`}
+            />
+          </button>
+        </div>
+        <p className={`mt-3 text-sm font-medium ${inAppNotificationsEnabled ? "text-green-600" : "text-gray-500"}`}>
+          {inAppNotificationsEnabled ? "เปิดการแจ้งเตือนอยู่" : "ปิดการแจ้งเตือนอยู่"}
+        </p>
       </div>
 
       {/* Sign out */}

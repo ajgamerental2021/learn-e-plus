@@ -63,27 +63,49 @@ export default function DailyVocabularyPractice({
   async function startRecording() {
     setError("");
     setAudioError("");
+    if (typeof window !== "undefined" && !window.isSecureContext) {
+      setError("การบันทึกเสียงต้องเปิดผ่าน HTTPS หรือแอพที่รองรับ");
+      return;
+    }
     if (!navigator.mediaDevices?.getUserMedia) {
       setError("อุปกรณ์นี้ยังไม่รองรับการบันทึกเสียงในเบราว์เซอร์");
       return;
     }
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const mimeType = preferredAudioMimeType();
-    const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
-    chunksRef.current = [];
-    recorderRef.current = recorder;
-    recorder.ondataavailable = (event) => {
-      if (event.data.size > 0) chunksRef.current.push(event.data);
-    };
-    recorder.onstop = () => {
-      const blob = new Blob(chunksRef.current, { type: recorder.mimeType || mimeType || "audio/mp4" });
-      const reader = new FileReader();
-      reader.onloadend = () => setAudioDataUrl(String(reader.result));
-      reader.readAsDataURL(blob);
-      stream.getTracks().forEach((track) => track.stop());
-    };
-    recorder.start();
-    setRecording(true);
+    if (typeof MediaRecorder === "undefined") {
+      setError("อุปกรณ์นี้ยังไม่รองรับ MediaRecorder กรุณาอัปเดต Android System WebView หรือ Chrome");
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = preferredAudioMimeType();
+      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+      chunksRef.current = [];
+      recorderRef.current = recorder;
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) chunksRef.current.push(event.data);
+      };
+      recorder.onerror = () => {
+        setError("บันทึกเสียงไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
+        stream.getTracks().forEach((track) => track.stop());
+        setRecording(false);
+      };
+      recorder.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: recorder.mimeType || mimeType || "audio/mp4" });
+        const reader = new FileReader();
+        reader.onloadend = () => setAudioDataUrl(String(reader.result));
+        reader.readAsDataURL(blob);
+        stream.getTracks().forEach((track) => track.stop());
+      };
+      recorder.start();
+      setRecording(true);
+    } catch (err) {
+      const name = err instanceof DOMException ? err.name : "";
+      if (name === "NotAllowedError" || name === "PermissionDeniedError") {
+        setError("แอพยังไม่ได้รับอนุญาตใช้ไมโครโฟน กรุณาอนุญาตไมค์ใน Android Settings แล้วลองใหม่");
+      } else {
+        setError("เปิดไมโครโฟนไม่ได้ กรุณาตรวจสอบสิทธิ์ไมค์และลองใหม่");
+      }
+    }
   }
 
   function stopRecording() {

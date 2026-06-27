@@ -24,6 +24,7 @@ export async function GET() {
         },
       },
       preferences: true,
+      notificationPrefs: true,
       streak: true,
     },
   });
@@ -41,6 +42,7 @@ const updateSchema = z.object({
   learningPathCode: z.enum(["GENERAL", "DAILY_LIFE", "STUDENTS", "WORK", "TOEIC", "TOEFL", "IELTS"]).optional(),
   examTarget: z.string().optional(),
   dailyGoalMinutes: z.number().int().min(5).max(120).optional(),
+  inAppNotificationsEnabled: z.boolean().optional(),
 });
 
 export async function PATCH(req: NextRequest) {
@@ -55,10 +57,22 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
   }
 
-  const updated = await db.userProfile.update({
-    where: { userId: session.user.id },
-    data: parsed.data,
-  });
+  const { inAppNotificationsEnabled, ...profileData } = parsed.data;
+
+  const updated = Object.keys(profileData).length > 0
+    ? await db.userProfile.update({
+      where: { userId: session.user.id },
+      data: profileData,
+    })
+    : await db.userProfile.findUnique({ where: { userId: session.user.id } });
+
+  if (typeof inAppNotificationsEnabled === "boolean") {
+    await db.notificationPreference.upsert({
+      where: { userId: session.user.id },
+      update: { inAppEnabled: inAppNotificationsEnabled },
+      create: { userId: session.user.id, inAppEnabled: inAppNotificationsEnabled },
+    });
+  }
 
   return NextResponse.json(updated);
 }

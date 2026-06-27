@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { notifyHomeworkSubmitted } from "@/lib/homework-notifications";
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
@@ -13,8 +14,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const assignment = await db.homeworkAssignment.findFirst({
     where: { id, userId: session.user.id },
     include: {
-      homework: { select: { maxAttempts: true } },
+      homework: { select: { nameTh: true, maxAttempts: true } },
       submissions: { select: { id: true } },
+      user: { include: { profile: { select: { displayName: true } } } },
     },
   });
 
@@ -39,6 +41,19 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   await db.homeworkAssignment.update({
     where: { id },
     data: { status: "IN_PROGRESS" },
+  });
+
+  const studentName = assignment.user.profile?.displayName ?? assignment.user.email;
+  await notifyHomeworkSubmitted({
+    studentId: assignment.userId,
+    titleTh: "มีการส่งการบ้านใหม่",
+    bodyTh: `${studentName} ส่ง "${assignment.homework.nameTh}" แล้ว กดเพื่อเปิดดูงาน`,
+    href: `/admin/homework/${submission.id}`,
+    data: {
+      assignmentId: assignment.id,
+      submissionId: submission.id,
+      homeworkType: "LESSON_HOMEWORK",
+    },
   });
 
   return NextResponse.json({ submission, attemptNumber, remaining: maxAttempts - attemptNumber });

@@ -10,7 +10,7 @@ export default async function ProfilePage() {
   const [user, profile, streak, skillScores, lessonsDone, testsDone] = await Promise.all([
     db.user.findUnique({
       where: { id: session.user.id },
-      select: { id: true, email: true, createdAt: true, role: true },
+      select: { id: true, email: true, createdAt: true, role: true, notificationPrefs: true },
     }),
     db.userProfile.findUnique({
       where: { userId: session.user.id },

@@ -6,6 +6,14 @@ export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  const prefs = await db.notificationPreference.findUnique({
+    where: { userId: session.user.id },
+    select: { inAppEnabled: true },
+  });
+  if (prefs?.inAppEnabled === false) {
+    return NextResponse.json({ notifications: [], unreadCount: 0 });
+  }
+
   const unreadOnly = req.nextUrl.searchParams.get("unread") === "true";
 
   const notifications = await db.notification.findMany({

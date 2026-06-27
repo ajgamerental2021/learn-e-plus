@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { notifyHomeworkSubmitted } from "@/lib/homework-notifications";
 
 const schema = z.object({
   spokenText: z.string().trim().max(200).optional(),
@@ -59,38 +60,17 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   });
 
   const studentName = assignment.user.profile?.displayName ?? assignment.user.email;
-  const reviewHref = `/homework/vocabulary/submissions/${assignment.userId}`;
-  const [staff, guardians] = await Promise.all([
-    db.user.findMany({
-      where: { role: { in: ["ADMIN", "TEACHER"] }, isActive: true },
-      select: { id: true },
-    }),
-    db.guardianStudent.findMany({
-      where: { studentId: assignment.userId },
-      select: { guardianId: true },
-    }),
-  ]);
-  const recipientIds = Array.from(new Set([
-    ...staff.map((user) => user.id),
-    ...guardians.map((link) => link.guardianId),
-  ])).filter((userId) => userId !== assignment.userId);
-
-  if (recipientIds.length > 0) {
-    await db.notification.createMany({
-      data: recipientIds.map((userId) => ({
-        userId,
-        type: "HOMEWORK_DUE_TODAY",
-        titleTh: "มีการส่งการบ้านท่องศัพท์",
-        bodyTh: `${studentName} ส่งคำว่า "${assignment.vocabulary.word}" แล้ว กดเพื่อฟังเสียงและดูประวัติ`,
-        data: {
-          href: reviewHref,
-          assignmentId: updated.id,
-          studentId: assignment.userId,
-          homeworkType: "DAILY_VOCABULARY",
-        },
-      })),
-    });
-  }
+  await notifyHomeworkSubmitted({
+    studentId: assignment.userId,
+    titleTh: "มีการส่งการบ้านท่องศัพท์",
+    bodyTh: `${studentName} ส่งคำว่า "${assignment.vocabulary.word}" แล้ว กดเพื่อฟังเสียงและดูประวัติ`,
+    href: `/homework/vocabulary/submissions/${assignment.userId}`,
+    data: {
+      assignmentId: updated.id,
+      homeworkType: "DAILY_VOCABULARY",
+      vocabularyId: assignment.vocabularyId,
+    },
+  });
 
   return NextResponse.json({ ok: true, assignment: updated });
 }
