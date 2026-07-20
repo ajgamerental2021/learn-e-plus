@@ -1,5 +1,6 @@
 import webPush from "web-push";
 import { db } from "@/lib/db";
+import { getVapidPrivateKey, getVapidPublicKey, getVapidSubject } from "@/lib/vapid-keys";
 
 type PushPayload = {
   title: string;
@@ -11,14 +12,10 @@ let configured = false;
 
 function configureWebPush() {
   if (configured) return true;
-  const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-  const privateKey = process.env.VAPID_PRIVATE_KEY;
+  const publicKey = getVapidPublicKey();
+  const privateKey = getVapidPrivateKey();
   if (!publicKey || !privateKey) return false;
-  webPush.setVapidDetails(
-    process.env.VAPID_SUBJECT || "mailto:admin@learneplus.local",
-    publicKey,
-    privateKey,
-  );
+  webPush.setVapidDetails(getVapidSubject(), publicKey, privateKey);
   configured = true;
   return true;
 }
