@@ -28,5 +28,11 @@ services:
         value: ""
       - key: NEXT_PUBLIC_GOOGLE_ENABLED
         value: "false"
+      - key: NEXT_PUBLIC_VAPID_PUBLIC_KEY
+        value: BHM1fQC3ksoGAsHoO0y6MSkDIjRgXGFNLxF587rB1DzzGgR9t3wrWFU9J1QdDPq9GZFA2fM
+      - key: VAPID_PRIVATE_KEY
+        value: tL5iZos8t6HYo23Abc3Tvx-q833UvxKqlRTrh5yNf9Y
+      - key: VAPID_SUBJECT
+        value: mailto:admin@learneplus.local
       - key: NODE_ENV
         value: production

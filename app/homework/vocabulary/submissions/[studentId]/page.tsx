@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
+import DailyVocabularySubmissionActions from "@/components/homework/DailyVocabularySubmissionActions";
 
 const STATUS_LABEL: Record<string, string> = {
   NOT_STARTED: "ยังไม่เริ่ม",
@@ -42,6 +43,12 @@ export default async function DailyVocabularySubmissionsPage({ params }: { param
     orderBy: { submittedAt: "desc" },
     take: 180,
     include: {
+      reactions: {
+        select: {
+          userId: true,
+          emoji: true,
+        },
+      },
       vocabulary: {
         select: {
           word: true,
@@ -102,6 +109,16 @@ export default async function DailyVocabularySubmissionsPage({ params }: { param
                   <p className="mt-1 text-sm text-gray-500">{item.vocabulary.exampleTranslation}</p>
                 </div>
               )}
+
+              <DailyVocabularySubmissionActions
+                assignmentId={item.id}
+                word={item.vocabulary.word}
+                initialReaction={item.reactions.find((reaction) => reaction.userId === session.user.id)?.emoji ?? null}
+                initialCounts={Object.entries(item.reactions.reduce<Record<string, number>>((counts, reaction) => {
+                  counts[reaction.emoji] = (counts[reaction.emoji] ?? 0) + 1;
+                  return counts;
+                }, {})).map(([emoji, count]) => ({ emoji, count }))}
+              />
 
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 <div className="rounded-lg border p-3">

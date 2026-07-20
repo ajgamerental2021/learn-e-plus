@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { sendPushToUsers } from "@/lib/push-notifications";
 
 type HomeworkNotificationInput = {
   studentId: string;
@@ -63,5 +64,11 @@ export async function notifyHomeworkSubmitted({
         ...data,
       },
     })),
+  });
+
+  await sendPushToUsers(recipientIds, {
+    title: titleTh,
+    body: bodyTh,
+    href,
   });
 }

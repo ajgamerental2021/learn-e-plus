@@ -18,11 +18,32 @@ export default function NotificationBell() {
   const [unread, setUnread] = useState(0);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const ref = useRef<HTMLDivElement>(null);
+  const lastSeenIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/notifications?unread=true")
-      .then((r) => r.json())
-      .then((d) => setUnread(d.unreadCount ?? 0));
+    let alive = true;
+    async function loadUnread(showSystemNotification = false) {
+      const res = await fetch("/api/notifications?unread=true");
+      const data = await res.json();
+      if (!alive) return;
+      const nextNotifications: Notification[] = data.notifications ?? [];
+      const newest = nextNotifications[0];
+      if (showSystemNotification && newest && newest.id !== lastSeenIdRef.current && "Notification" in window && Notification.permission === "granted") {
+        new Notification(newest.titleTh, {
+          body: newest.bodyTh,
+          icon: "/icons/icon-192.png",
+          data: { href: newest.data?.href ?? "/notifications" },
+        });
+      }
+      if (newest) lastSeenIdRef.current = newest.id;
+      setUnread(data.unreadCount ?? 0);
+    }
+    void loadUnread(false);
+    const interval = window.setInterval(() => void loadUnread(true), 30000);
+    return () => {
+      alive = false;
+      window.clearInterval(interval);
+    };
   }, []);
 
   useEffect(() => {

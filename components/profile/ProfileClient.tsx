@@ -44,6 +44,8 @@ export default function ProfileClient({ user, profile, streak, skillScores, less
   const router = useRouter();
   const [name, setName] = useState(user.displayName ?? "");
   const [inAppNotificationsEnabled, setInAppNotificationsEnabled] = useState(user.notificationPrefs?.inAppEnabled ?? true);
+  const [pushEnabled, setPushEnabled] = useState(user.notificationPrefs?.pushEnabled ?? true);
+  const [pushMessage, setPushMessage] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -57,6 +59,54 @@ export default function ProfileClient({ user, profile, streak, skillScores, less
     setSaved(true);
     setSaving(false);
     setTimeout(() => setSaved(false), 2000);
+    router.refresh();
+  }
+
+  async function enablePushNotifications() {
+    setPushMessage("");
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+      setPushMessage("เครื่องนี้ยังไม่รองรับ push notification แบบเว็บ");
+      return;
+    }
+    const keyRes = await fetch("/api/push/vapid-public-key");
+    const { publicKey } = await keyRes.json();
+    if (!publicKey) {
+      setPushMessage("ยังไม่ได้ตั้งค่า push key บน server");
+      return;
+    }
+    const permission = await Notification.requestPermission();
+    if (permission !== "granted") {
+      setPushMessage("ยังไม่ได้อนุญาตแจ้งเตือนบนเครื่องนี้");
+      return;
+    }
+    const registration = await navigator.serviceWorker.register("/sw.js");
+    const existing = await registration.pushManager.getSubscription();
+    const subscription = existing ?? await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(publicKey),
+    });
+    await fetch("/api/push/subscribe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(subscription),
+    });
+    setPushEnabled(true);
+    setPushMessage("เปิดแจ้งเตือนเครื่องนี้แล้ว");
+    router.refresh();
+  }
+
+  async function disablePushNotifications() {
+    setPushMessage("");
+    const registration = "serviceWorker" in navigator ? await navigator.serviceWorker.getRegistration("/sw.js") : null;
+    const subscription = registration ? await registration.pushManager.getSubscription() : null;
+    if (subscription) await subscription.unsubscribe();
+    await fetch("/api/push/subscribe", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ endpoint: subscription?.endpoint }),
+    });
+    setPushEnabled(false);
+    setPushMessage("ปิด push notification บนเครื่องนี้แล้ว");
     router.refresh();
   }
 
@@ -171,6 +221,26 @@ export default function ProfileClient({ user, profile, streak, skillScores, less
         <p className={`mt-3 text-sm font-medium ${inAppNotificationsEnabled ? "text-green-600" : "text-gray-500"}`}>
           {inAppNotificationsEnabled ? "เปิดการแจ้งเตือนอยู่" : "ปิดการแจ้งเตือนอยู่"}
         </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={enablePushNotifications}
+            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          >
+            เปิดแจ้งเตือนเครื่องนี้
+          </button>
+          <button
+            type="button"
+            onClick={disablePushNotifications}
+            className="rounded-lg border px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            ปิด Push
+          </button>
+        </div>
+        <p className={`mt-2 text-xs ${pushEnabled ? "text-green-600" : "text-gray-500"}`}>
+          {pushEnabled ? "Push notification เปิดอยู่ในบัญชีนี้" : "Push notification ปิดอยู่ในบัญชีนี้"}
+        </p>
+        {pushMessage && <p className="mt-2 text-xs text-gray-500">{pushMessage}</p>}
       </div>
 
       {/* Sign out */}
@@ -184,4 +254,11 @@ export default function ProfileClient({ user, profile, streak, skillScores, less
       </div>
     </div>
   );
+}
+
+function urlBase64ToUint8Array(base64String: string) {
+  const padding = "=".repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = window.atob(base64);
+  return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
 }

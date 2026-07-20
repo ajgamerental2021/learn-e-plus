@@ -132,6 +132,7 @@ enum NotificationType {
   NEW_LESSON
   TEACHER_FEEDBACK
   HOMEWORK_GRADED
+  HOMEWORK_REACTION
   ACHIEVEMENT_EARNED
 }
 
@@ -159,30 +160,32 @@ model User {
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
-  profile                UserProfile?
-  preferences            UserPreferences?
-  notificationPrefs      NotificationPreference?
-  courseProgress         UserCourseProgress[]
-  unitProgress           UserUnitProgress[]
-  lessonProgress         UserLessonProgress[]
-  vocabularyProgress     VocabularyProgress[]
-  dailyVocabularyItems   DailyVocabularyAssignment[]
-  skillScores            SkillScore[]
-  streak                 LearningStreak?
-  dailyGoals             DailyGoal[]
-  userAchievements       UserAchievement[]
-  homeworkAssignments    HomeworkAssignment[]
-  testAttempts           TestAttempt[]
-  placementResult        PlacementTestResult?
-  levelExamResults       LevelExamResult[]
-  weeklyReports          WeeklyReport[]
-  monthlyReports         MonthlyReport[]
-  notifications          Notification[]
-  scheduledNotifications ScheduledNotification[]
-  guardianStudents       GuardianStudent[]     @relation("GuardianStudents")
-  studentGuardians       GuardianStudent[]     @relation("StudentGuardians")
-  accounts               Account[]
-  sessions               Session[]
+  profile                  UserProfile?
+  preferences              UserPreferences?
+  notificationPrefs        NotificationPreference?
+  courseProgress           UserCourseProgress[]
+  unitProgress             UserUnitProgress[]
+  lessonProgress           UserLessonProgress[]
+  vocabularyProgress       VocabularyProgress[]
+  dailyVocabularyItems     DailyVocabularyAssignment[]
+  skillScores              SkillScore[]
+  streak                   LearningStreak?
+  dailyGoals               DailyGoal[]
+  userAchievements         UserAchievement[]
+  homeworkAssignments      HomeworkAssignment[]
+  testAttempts             TestAttempt[]
+  placementResult          PlacementTestResult?
+  levelExamResults         LevelExamResult[]
+  weeklyReports            WeeklyReport[]
+  monthlyReports           MonthlyReport[]
+  notifications            Notification[]
+  scheduledNotifications   ScheduledNotification[]
+  pushSubscriptions        PushSubscription[]
+  dailyVocabularyReactions DailyVocabularyReaction[]
+  guardianStudents         GuardianStudent[]           @relation("GuardianStudents")
+  studentGuardians         GuardianStudent[]           @relation("StudentGuardians")
+  accounts                 Account[]
+  sessions                 Session[]
 }
 
 model GuardianStudent {
@@ -285,26 +288,26 @@ model Level {
   isActive    Boolean   @default(true)
   createdAt   DateTime  @default(now())
 
-  courses            Course[]
-  vocabularyItems    VocabularyItem[]
-  questions          Question[]
-  tests              Test[]
-  currentLevelUsers  UserProfile[]    @relation("CurrentLevel")
-  targetLevelUsers   UserProfile[]    @relation("TargetLevel")
-  levelExamResults   LevelExamResult[]
-  levelExamSetting   LevelExamSetting?
+  courses           Course[]
+  vocabularyItems   VocabularyItem[]
+  questions         Question[]
+  tests             Test[]
+  currentLevelUsers UserProfile[]     @relation("CurrentLevel")
+  targetLevelUsers  UserProfile[]     @relation("TargetLevel")
+  levelExamResults  LevelExamResult[]
+  levelExamSetting  LevelExamSetting?
 }
 
 model LevelExamSetting {
-  id                    String   @id @default(cuid())
-  levelId               String   @unique
-  minCourseCompletionPct Int     @default(100)
-  minUnitTestAvgScore   Int      @default(70)
-  minLevelExamScore     Int      @default(80)
-  minSkillScore         Int      @default(60)
-  minHomeworkSubmitPct  Int      @default(80)
-  retakeAfterDays       Int      @default(7)
-  updatedAt             DateTime @updatedAt
+  id                     String   @id @default(cuid())
+  levelId                String   @unique
+  minCourseCompletionPct Int      @default(100)
+  minUnitTestAvgScore    Int      @default(70)
+  minLevelExamScore      Int      @default(80)
+  minSkillScore          Int      @default(60)
+  minHomeworkSubmitPct   Int      @default(80)
+  retakeAfterDays        Int      @default(7)
+  updatedAt              DateTime @updatedAt
 
   level Level @relation(fields: [levelId], references: [id])
 }
@@ -358,10 +361,10 @@ model Lesson {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  unit       Unit                 @relation(fields: [unitId], references: [id])
-  contents   LessonContent[]
-  progress   UserLessonProgress[]
-  homework   Homework[]
+  unit     Unit                 @relation(fields: [unitId], references: [id])
+  contents LessonContent[]
+  progress UserLessonProgress[]
+  homework Homework[]
 }
 
 model LessonContent {
@@ -391,33 +394,49 @@ model VocabularyItem {
   isActive           Boolean   @default(true)
   createdAt          DateTime  @default(now())
 
-  level    Level                @relation(fields: [levelId], references: [id])
-  progress VocabularyProgress[]
+  level            Level                       @relation(fields: [levelId], references: [id])
+  progress         VocabularyProgress[]
   dailyAssignments DailyVocabularyAssignment[]
 }
 
 model DailyVocabularyAssignment {
-  id             String    @id @default(cuid())
-  userId         String
-  vocabularyId   String
-  assignedDate   DateTime  @db.Date
-  promptData      Json?
-  status          HomeworkStatus @default(NOT_STARTED)
-  spokenText      String?
-  spellingText    String?
-  audioDataUrl    String?
-  audioMimeType   String?
-  submittedAt     DateTime?
-  completedAt     DateTime?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id            String         @id @default(cuid())
+  userId        String
+  vocabularyId  String
+  assignedDate  DateTime       @db.Date
+  promptData    Json?
+  status        HomeworkStatus @default(NOT_STARTED)
+  spokenText    String?
+  spellingText  String?
+  audioDataUrl  String?
+  audioMimeType String?
+  submittedAt   DateTime?
+  completedAt   DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
-  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  vocabulary VocabularyItem @relation(fields: [vocabularyId], references: [id])
+  user       User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vocabulary VocabularyItem            @relation(fields: [vocabularyId], references: [id])
+  reactions  DailyVocabularyReaction[]
 
   @@unique([userId, assignedDate])
   @@unique([userId, vocabularyId])
   @@index([vocabularyId])
+}
+
+model DailyVocabularyReaction {
+  id           String   @id @default(cuid())
+  assignmentId String
+  userId       String
+  emoji        String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  assignment DailyVocabularyAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  user       User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([assignmentId, userId])
+  @@index([userId])
 }
 
 // ──────────────────────────────────────
@@ -702,13 +721,13 @@ model TestAttempt {
 }
 
 model TestAnswer {
-  id          String   @id @default(cuid())
-  attemptId   String
-  questionId  String
-  userAnswer  Json
-  isCorrect   Boolean?
-  score       Int?
-  answeredAt  DateTime @default(now())
+  id         String   @id @default(cuid())
+  attemptId  String
+  questionId String
+  userAnswer Json
+  isCorrect  Boolean?
+  score      Int?
+  answeredAt DateTime @default(now())
 
   attempt  TestAttempt @relation(fields: [attemptId], references: [id])
   question Question    @relation(fields: [questionId], references: [id])
@@ -798,17 +817,17 @@ model MonthlyReport {
 // ──────────────────────────────────────
 
 model NotificationPreference {
-  id                        String   @id @default(cuid())
-  userId                    String   @unique
-  inAppEnabled              Boolean  @default(true)
-  pushEnabled               Boolean  @default(true)
-  emailEnabled              Boolean  @default(true)
-  dailyReminderEnabled      Boolean  @default(true)
-  dailyReminderTime         String   @default("09:00")
-  homeworkReminderDaysBefore Int     @default(1)
-  quietHoursStart           String?
-  quietHoursEnd             String?
-  updatedAt                 DateTime @updatedAt
+  id                         String   @id @default(cuid())
+  userId                     String   @unique
+  inAppEnabled               Boolean  @default(true)
+  pushEnabled                Boolean  @default(true)
+  emailEnabled               Boolean  @default(true)
+  dailyReminderEnabled       Boolean  @default(true)
+  dailyReminderTime          String   @default("09:00")
+  homeworkReminderDaysBefore Int      @default(1)
+  quietHoursStart            String?
+  quietHoursEnd              String?
+  updatedAt                  DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -824,6 +843,22 @@ model Notification {
   createdAt DateTime         @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model ScheduledNotification {
