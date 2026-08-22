@@ -2,7 +2,9 @@ import { NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-const MAX_TEXT_LENGTH = 180;
+// Google's translate_tts endpoint rejects anything much longer; the client
+// splits long text into chunks and plays them back to back.
+const MAX_TEXT_LENGTH = 190;
 
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);

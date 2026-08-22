@@ -2,10 +2,16 @@
 
 import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Mic, Square, Volume2 } from "lucide-react";
+import { Mic, Square, Turtle, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { playSpellingTextToSpeech, playTextToSpeech } from "@/lib/client-tts";
+import {
+  playSpellingTextToSpeech,
+  playThaiReadingTextToSpeech,
+  playThaiSpellingTextToSpeech,
+  playWordTextToSpeech,
+} from "@/lib/client-tts";
+import { thaiReading, thaiSpelling } from "@/lib/thai-phonetics";
 
 type DailyAssignment = {
   id: string;
@@ -50,14 +56,31 @@ export default function DailyVocabularyPractice({
   const expectedSpelling = useMemo(() => today?.vocabulary.word.replace(/\s+/g, "").toLowerCase() ?? "", [today]);
   const typedSpelling = spellingText.replace(/\s+/g, "").toLowerCase();
 
-  function speakWord() {
+  const word = today?.vocabulary.word ?? "";
+  const reading = useMemo(
+    () => thaiReading(word, today?.vocabulary.pronunciationTh),
+    [word, today?.vocabulary.pronunciationTh]
+  );
+  const spelling = useMemo(() => thaiSpelling(word), [word]);
+
+  function speakWord(slow = false) {
     if (!today) return;
-    void playTextToSpeech(today.vocabulary.word, { lang: "en-US", preferAudio: true });
+    void playWordTextToSpeech(today.vocabulary.word, slow);
+  }
+
+  function speakThaiReading() {
+    if (!reading) return;
+    void playThaiReadingTextToSpeech(reading.text);
   }
 
   function speakSpelling() {
     if (!today) return;
     void playSpellingTextToSpeech(today.vocabulary.word);
+  }
+
+  function speakThaiSpelling() {
+    if (!today) return;
+    void playThaiSpellingTextToSpeech(today.vocabulary.word);
   }
 
   async function startRecording() {
@@ -167,14 +190,23 @@ export default function DailyVocabularyPractice({
           <div>
             <p className="text-xs font-medium text-blue-600">คำศัพท์ประจำวันนี้</p>
             <h1 className="mt-2 text-4xl font-bold text-gray-900">{today.vocabulary.word}</h1>
-            <p className="mt-2 text-sm text-gray-500">{today.vocabulary.pronunciationTh ?? "ยังไม่มีคำอ่านไทย"}</p>
+            {reading && <p className="mt-2 text-xl font-semibold text-blue-700">{reading.text}</p>}
+            {reading?.perWord && (
+              <p className="mt-1 text-xs text-gray-400">คำอ่านแยกทีละคำ</p>
+            )}
           </div>
           <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">{today.vocabulary.cefrLevel}</span>
         </div>
 
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
           <InfoBox label="คำแปล" value={today.vocabulary.translationTh} />
-          <InfoBox label="การออกเสียง" value={today.vocabulary.pronunciationTh ?? today.vocabulary.word} />
+          {reading && <InfoBox label="คำอ่านไทย" value={reading.text} />}
+        </div>
+
+        <div className="mt-3 rounded-lg border-2 border-indigo-100 bg-indigo-50 p-4">
+          <p className="text-xs font-medium text-indigo-700">สะกดทีละตัว</p>
+          <p className="mt-1 text-lg font-semibold tracking-wide text-indigo-950">{spelling}</p>
+          <p className="mt-1 text-xs text-indigo-500">{word.toUpperCase().split("").join(" - ")}</p>
         </div>
 
         {today.vocabulary.exampleSentence && (
@@ -184,15 +216,40 @@ export default function DailyVocabularyPractice({
           </div>
         )}
 
-        <div className="mt-4 flex flex-wrap gap-3">
-          <Button type="button" className="bg-blue-600 text-white hover:bg-blue-700" onClick={speakWord}>
-            <Volume2 className="size-4" />
-            ฟังเสียงคำศัพท์
-          </Button>
-          <Button type="button" className="bg-indigo-600 text-white hover:bg-indigo-700" onClick={speakSpelling}>
-            <Volume2 className="size-4" />
-            ฟังเสียงสะกดคำ
-          </Button>
+        <div className="mt-5 space-y-3">
+          <div>
+            <p className="mb-2 text-xs font-medium text-gray-500">ฟังคำศัพท์</p>
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" className="h-11 bg-blue-600 text-white hover:bg-blue-700" onClick={() => speakWord(false)}>
+                <Volume2 className="size-4" />
+                เสียงอังกฤษ
+              </Button>
+              <Button type="button" className="h-11 bg-blue-500 text-white hover:bg-blue-600" onClick={() => speakWord(true)}>
+                <Turtle className="size-4" />
+                อังกฤษ ช้าๆ
+              </Button>
+              {reading && (
+                <Button type="button" className="h-11 bg-emerald-600 text-white hover:bg-emerald-700" onClick={speakThaiReading}>
+                  <Volume2 className="size-4" />
+                  คำอ่านไทย
+                </Button>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <p className="mb-2 text-xs font-medium text-gray-500">ฟังสะกดทีละตัว</p>
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" className="h-11 bg-indigo-600 text-white hover:bg-indigo-700" onClick={speakSpelling}>
+                <Volume2 className="size-4" />
+                สะกดอังกฤษ
+              </Button>
+              <Button type="button" className="h-11 bg-emerald-600 text-white hover:bg-emerald-700" onClick={speakThaiSpelling}>
+                <Volume2 className="size-4" />
+                สะกดแบบไทย
+              </Button>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -276,7 +333,11 @@ export default function DailyVocabularyPractice({
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
                     <p className="font-semibold text-gray-800">{item.vocabulary.word}</p>
-                    <p className="text-sm text-gray-500">{item.vocabulary.pronunciationTh ?? ""} · {item.vocabulary.translationTh}</p>
+                    <p className="text-sm text-gray-500">
+                      {[thaiReading(item.vocabulary.word, item.vocabulary.pronunciationTh)?.text, item.vocabulary.translationTh]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </p>
                     {item.vocabulary.exampleSentence && (
                       <p className="mt-1 text-xs text-gray-400">{item.vocabulary.exampleSentence} — {item.vocabulary.exampleTranslation}</p>
                     )}
