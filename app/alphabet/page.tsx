@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { alphabetLetters, alphabetSpeechText } from "@/lib/alphabet-data";
 import SpeakButton from "@/components/alphabet/SpeakButton";
+import VoiceSettings from "@/components/common/VoiceSettings";
 
 export default async function AlphabetChartPage() {
   const session = await auth();
@@ -31,6 +32,8 @@ export default async function AlphabetChartPage() {
           </div>
         </div>
       </section>
+
+      <VoiceSettings />
 
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         {alphabetLetters.map((item) => (

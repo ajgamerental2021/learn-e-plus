@@ -18,12 +18,7 @@ export default function SpeakButton({
   className?: string;
 }) {
   function speak() {
-    void playTextToSpeech(text, {
-      lang,
-      preferAudio: true,
-      rate: slow ? 0.5 : 0.7,
-      speed: slow ? 0.3 : 1,
-    });
+    void playTextToSpeech(text, { lang, rate: slow ? 0.55 : 0.85 });
   }
 
   const Icon = slow ? Turtle : Volume2;

@@ -12,6 +12,7 @@ import {
   playWordTextToSpeech,
 } from "@/lib/client-tts";
 import { thaiReading, thaiSpelling } from "@/lib/thai-phonetics";
+import VoiceSettings from "@/components/common/VoiceSettings";
 
 type DailyAssignment = {
   id: string;
@@ -252,6 +253,8 @@ export default function DailyVocabularyPractice({
           </div>
         </div>
       </section>
+
+      <VoiceSettings />
 
       <section className="rounded-xl border bg-white p-5">
         <h2 className="font-semibold text-gray-800">ส่งการบ้านท่องศัพท์</h2>

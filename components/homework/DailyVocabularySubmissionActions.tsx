@@ -28,7 +28,7 @@ export default function DailyVocabularySubmissionActions({
   const [savingEmoji, setSavingEmoji] = useState("");
 
   function listenWord() {
-    void playTextToSpeech(word, { lang: "en-US", preferAudio: true });
+    void playTextToSpeech(word, { lang: "en-US" });
   }
 
   async function react(emoji: string) {
